@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Segoe UI", "Heebo", "Rubik", "Assistant", system-ui, -apple-system,
+    "Helvetica Neue", Arial, sans-serif;
+  --color-brand-50: #eef4fb;
+  --color-brand-500: #2f6db0;
+  --color-brand-600: #2a5f99;
+  --color-brand-700: #234e7e;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+}
+
+/* Inputs inherit RTL direction from <html dir="rtl"> but keep numeric fields readable. */
+input[inputmode="numeric"],
+input[type="number"] {
+  direction: ltr;
+  text-align: right;
+}

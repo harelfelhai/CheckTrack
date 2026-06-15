@@ -1,0 +1,52 @@
+# CheckTrack
+
+מערכת מעקב, החתמה ותיעוד של **צ'קים יוצאים** — מרגע כתיבת הצ'ק ועד הפקדתו אצל
+הספק/לקוח. בנויה ב-Next.js (App Router, TypeScript), ממשק בעברית RTL, mobile-first.
+בסיס הנתונים והאחסון הם **Google Sheets** (טבלת ריכוז) ו-**Google Drive** (קבצי PDF).
+
+> תוכנית הבנייה המלאה: ראו `אפיון_מערכת_CheckTrack_סופי.pdf` ואת קובץ התוכנית בתיקיית התוכניות.
+
+## הרצה מקומית
+
+```bash
+npm install
+cp .env.local.example .env.local   # ערכו לפי הצורך
+npm run dev                        # http://localhost:3000
+```
+
+ב-`CHECKTRACK_DEV_MODE=true` (ברירת המחדל) המערכת רצה עם אחסון בזיכרון (mock)
+ללא צורך בהגדרת Google כלל — נוח לפיתוח ובדיקות.
+
+## מסכים
+
+1. **`/capture`** — קליטת צ'ק חדש: צילום/סריקה, טופס פרטים (כל שדה ניתן לעריכה
+   ידנית), ובחירת פעולת מסירה (שמור כלא נמסר / החתמה פרונטלית / שליחת לינק מרחוק).
+2. **`/dashboard`** — בקרה ומעקב: טאב "לא נמסרו" (ברירת מחדל) + טאב "ארכיון".
+3. **`/sign/[token]`** — דף ציבורי לחתימת ספק חיצוני דרך לינק חד-פעמי.
+
+## הגדרת Google (כאשר עוברים מ-dev mode לפרודקשן)
+
+1. צרו פרויקט ב-[Google Cloud Console](https://console.cloud.google.com/).
+2. הפעילו **Google Drive API** ו-**Google Sheets API**.
+3. הגדירו **OAuth consent screen** וצרו **OAuth Client (Web application)**.
+4. הפיקו **refresh token** של חשבון החברה עם הרשאות offline ל-Drive+Sheets.
+5. צרו Google Sheet עם טאב `Checks` ו-8 הכותרות, ותיקייה ייעודית ב-Drive;
+   שתפו את שתיהן עם חשבון החברה.
+6. מלאו את הערכים ב-`.env.local` והעבירו את `CHECKTRACK_DEV_MODE` ל-`false`.
+
+## פריסה (Deploy)
+
+האפליקציה מייצרת PDF דרך Chromium (puppeteer-core). לכן:
+- **שרת Node מלא** (Render / Google Cloud Run / VM): התקינו Chrome/Chromium על השרת
+  והגדירו `PUPPETEER_EXECUTABLE_PATH`. זו הדרך הפשוטה.
+- **Serverless (Vercel/Lambda)**: יש להוסיף `@sparticuz/chromium` ולהשתמש בו כ-
+  `executablePath` במקום דפדפן מערכת (ה-PDF רץ ב-runtime של Node, לא Edge).
+
+## סקריפטים
+
+| פקודה | תיאור |
+|---|---|
+| `npm run dev` | שרת פיתוח |
+| `npm run build` | בילד פרודקשן |
+| `npm run typecheck` | בדיקת טיפוסים (tsc) |
+| `npm test` | בדיקות יחידה (vitest) |
