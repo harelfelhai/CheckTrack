@@ -23,6 +23,7 @@ export default function Dashboard() {
   const [signError, setSignError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [share, setShare] = useState<ShareInfo | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -72,8 +73,9 @@ export default function Dashboard() {
       const data = (await res.json()) as ShareInfo & { error?: string };
       if (!res.ok) throw new Error(data.error ?? "יצירת הקישור נכשלה");
       setShare(data);
-    } catch {
-      /* surfaced minimally for now */
+    } catch (e) {
+      setToast(e instanceof Error ? e.message : "יצירת הקישור נכשלה");
+      setTimeout(() => setToast(null), 4000);
     }
   }
 
@@ -194,6 +196,12 @@ export default function Dashboard() {
           <div className="w-full max-w-md">
             <SharePanel info={share} onClose={() => setShare(null)} />
           </div>
+        </div>
+      )}
+
+      {toast && (
+        <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-lg bg-red-600 px-4 py-2 text-sm text-white shadow-lg">
+          {toast}
         </div>
       )}
     </main>

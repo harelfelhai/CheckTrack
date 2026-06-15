@@ -29,3 +29,7 @@ yarn-error.log*
 
 # vitest
 /coverage
+
+# playwright MCP scratch output (snapshots/screenshots written during UI probes)
+/.playwright-mcp
+/test-results

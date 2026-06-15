@@ -37,7 +37,12 @@ export default function CapturePage() {
   }
 
   /** Create the check row (status "not delivered"). Returns true on success. */
-  async function createCheck(): Promise<boolean> {
+  /**
+   * Create the check row. `allowExisting` controls 409 handling:
+   * - false (plain save): a duplicate check number is an error.
+   * - true (signing flows): an existing check is fine — proceed to sign it.
+   */
+  async function createCheck(allowExisting: boolean): Promise<void> {
     const res = await fetch("/api/checks", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -49,10 +54,13 @@ export default function CapturePage() {
         imageDataUrl: image ?? undefined,
       }),
     });
-    if (res.status === 409) return true; // already exists — fine, continue to sign
+    if (res.status === 409) {
+      if (allowExisting) return;
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      throw new Error(data.error ?? "צ'ק עם מספר זה כבר קיים במערכת");
+    }
     const data = (await res.json()) as { error?: string };
     if (!res.ok) throw new Error(data.error ?? "השמירה נכשלה");
-    return true;
   }
 
   async function saveNotDelivered() {
@@ -60,7 +68,7 @@ export default function CapturePage() {
     if (errors.length) return setFeedback({ kind: "error", message: errors.join(", ") });
     setFeedback({ kind: "saving" });
     try {
-      await createCheck();
+      await createCheck(false);
       setFeedback({ kind: "success", message: `הצ'ק נשמר כ"לא נמסר" בהצלחה` });
       reset();
     } catch (e) {
@@ -79,7 +87,7 @@ export default function CapturePage() {
     setSignError(null);
     setFeedback({ kind: "saving" });
     try {
-      await createCheck();
+      await createCheck(true);
       const res = await fetch(`/api/checks/${encodeURIComponent(values.checkNumber)}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -106,7 +114,7 @@ export default function CapturePage() {
     setShare(null);
     setFeedback({ kind: "saving" });
     try {
-      await createCheck();
+      await createCheck(true);
       const res = await fetch(`/api/share/${encodeURIComponent(values.checkNumber)}`, {
         method: "POST",
       });
