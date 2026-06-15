@@ -34,6 +34,17 @@ npm run dev                        # http://localhost:3000
    שתפו את שתיהן עם חשבון החברה.
 6. מלאו את הערכים ב-`.env.local` והעבירו את `CHECKTRACK_DEV_MODE` ל-`false`.
 
+### חשוב לחשבון Gmail אישי (ללא Workspace)
+הלקוח עובד עם **Gmail אישי + Google One** (אחסון מוגדל), לא Workspace:
+- **העבירו את אפליקציית ה-OAuth ל-"Production"** (ולא "Testing") — אחרת ה-refresh
+  token פג כל 7 ימים והשרת מאבד גישה ל-Drive/Sheets פעם בשבוע.
+- **התחברות מסכים 1–2** מתבצעת מול **allowlist אימיילים** (`AUTH_ALLOWED_EMAILS`),
+  לא מול דומיין ארגוני.
+- כדי להימנע מאימות כבד של גוגל, מומלץ שהאפליקציה **תיצור בעצמה** את ה-Sheet
+  והתיקייה (הרשאת `drive.file` המצומצמת) במקום שיתוף ידני.
+- הדוא"ל הארגוני על Microsoft אינו רלוונטי — השיתוף (`mailto`) נפתח בצד הלקוח
+  ב-Outlook; איננו שולחים מייל מהשרת.
+
 ## פריסה (Deploy)
 
 האפליקציה מייצרת PDF דרך Chromium (puppeteer-core). לכן:
