@@ -42,20 +42,20 @@ export default function CameraCapture({ imageDataUrl, onCapture }: Props) {
           <img
             src={imageDataUrl}
             alt="תצוגה מקדימה של הצ'ק"
-            className="max-h-64 w-full rounded-xl border border-slate-200 object-contain bg-white"
+            className="max-h-64 w-full rounded-lg border border-rule bg-card object-contain"
           />
           <div className="flex gap-2">
             <button
               type="button"
               onClick={() => inputRef.current?.click()}
-              className="flex-1 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              className="flex-1 rounded-lg border border-rule bg-card px-4 py-2 text-sm font-medium text-ink hover:border-ink"
             >
               צילום מחדש
             </button>
             <button
               type="button"
               onClick={() => onCapture(null)}
-              className="rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
+              className="rounded-lg border border-stamp/40 bg-card px-4 py-2 text-sm font-medium text-stamp hover:bg-stamp-soft"
             >
               הסר
             </button>
@@ -65,14 +65,14 @@ export default function CameraCapture({ imageDataUrl, onCapture }: Props) {
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
-          className="flex h-40 w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-300 bg-white text-slate-500 hover:border-brand-500 hover:text-brand-600"
+          className="flex h-40 w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-rule bg-card text-ink-soft transition hover:border-valid hover:text-valid"
         >
-          <span className="text-3xl">📷</span>
+          <span className="text-3xl">▣</span>
           <span className="font-medium">צילום / סריקת הצ'ק</span>
         </button>
       )}
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-stamp">{error}</p>}
     </div>
   );
 }

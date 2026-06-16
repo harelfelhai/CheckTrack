@@ -63,6 +63,10 @@ export async function renderCheckPdf(opts: {
   const page = await browser.newPage();
   try {
     await page.setContent(html, { waitUntil: "load" });
+    // Wait for the web fonts to load so the PDF renders with the right faces.
+    await page.evaluate(async () => {
+      await document.fonts.ready;
+    });
     return await page.pdf({
       format: "A4",
       printBackground: true,

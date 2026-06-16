@@ -2,30 +2,36 @@ import Link from "next/link";
 
 export default function HomePage() {
   return (
-    <main className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center gap-8 px-5 py-12">
+    <main className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center gap-10 px-5 py-12">
       <header className="text-center">
-        <h1 className="text-3xl font-bold text-brand-700">CheckTrack</h1>
-        <p className="mt-2 text-slate-600">מערכת מעקב, החתמה ותיעוד של צ'קים יוצאים</p>
+        <p className="tnum text-xs tracking-[0.3em] text-ink-soft">CHECKTRACK</p>
+        <h1 className="mt-3 font-display text-4xl font-black leading-tight text-ink">
+          כל צ'ק יוצא,
+          <br />
+          <span className="text-valid">מתועד וחתום.</span>
+        </h1>
+        <p className="mt-4 text-ink-soft">
+          קליטה, החתמה ומעקב — כדי ששום צ'ק לא יֵלך לאיבוד לפני שהופקד.
+        </p>
+        <div className="micr-rule mt-5">⑆ 0123456789 ⑆ 0123456789 ⑈</div>
       </header>
 
       <nav className="grid gap-4">
         <Link
           href="/capture"
-          className="rounded-2xl bg-brand-600 px-6 py-5 text-center text-lg font-semibold text-white shadow-sm transition hover:bg-brand-700"
+          className="group rounded-xl border border-ink bg-ink px-6 py-5 text-center text-lg font-semibold text-paper transition hover:bg-valid hover:border-valid"
         >
           קליטת צ'ק חדש
         </Link>
         <Link
           href="/dashboard"
-          className="rounded-2xl border border-slate-200 bg-white px-6 py-5 text-center text-lg font-semibold text-slate-800 shadow-sm transition hover:bg-slate-100"
+          className="rounded-xl border border-rule bg-card px-6 py-5 text-center text-lg font-semibold text-ink transition hover:border-ink"
         >
-          דשבורד בקרה ומעקב
+          פנקס הצ'קים — בקרה ומעקב
         </Link>
       </nav>
 
-      <footer className="text-center text-xs text-slate-400">
-        גרסה 0.1 — בפיתוח
-      </footer>
+      <footer className="text-center text-xs text-ink-soft">גרסה 0.1 — בפיתוח</footer>
     </main>
   );
 }

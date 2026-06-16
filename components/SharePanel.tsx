@@ -40,17 +40,16 @@ export default function SharePanel({
     }
   }
 
-  const btn =
-    "block w-full rounded-xl px-4 py-3 text-center font-semibold transition";
+  const btn = "block w-full rounded-lg px-4 py-3 text-center font-semibold transition";
 
   return (
-    <div className="space-y-3 rounded-xl border border-brand-200 bg-brand-50 p-4">
-      <p className="text-sm font-medium text-slate-700">
-        הצ'ק נשמר כ"לא נמסר". שלח את הקישור לחתימה מרחוק:
+    <div className="space-y-3 rounded-xl border border-valid/25 bg-valid-soft p-4">
+      <p className="text-sm font-medium text-ink">
+        הצ'ק נשמר כ״לא נמסר״. שלח את הקישור לחתימה מרחוק:
       </p>
 
       {canNativeShare && (
-        <button type="button" onClick={nativeShare} className={`${btn} bg-brand-600 text-white hover:bg-brand-700`}>
+        <button type="button" onClick={nativeShare} className={`${btn} bg-ink text-paper hover:bg-valid`}>
           שיתוף דרך המכשיר
         </button>
       )}
@@ -59,15 +58,15 @@ export default function SharePanel({
         שליחה בוואטסאפ
       </a>
 
-      <a href={info.mailtoUrl} className={`${btn} border border-slate-300 bg-white text-slate-700 hover:bg-slate-50`}>
+      <a href={info.mailtoUrl} className={`${btn} border border-rule bg-card text-ink hover:border-ink`}>
         שליחה במייל
       </a>
 
-      <button type="button" onClick={copyLink} className={`${btn} border border-slate-300 bg-white text-slate-700 hover:bg-slate-50`}>
+      <button type="button" onClick={copyLink} className={`${btn} border border-rule bg-card text-ink hover:border-ink`}>
         {copied ? "הקישור הועתק ✓" : "העתקת קישור"}
       </button>
 
-      <button type="button" onClick={onClose} className="w-full pt-1 text-sm text-slate-500 hover:text-slate-700">
+      <button type="button" onClick={onClose} className="w-full pt-1 text-sm text-ink-soft hover:text-ink">
         סגירה
       </button>
     </div>

@@ -18,21 +18,22 @@ interface Props {
 /**
  * Check details form (spec §4, מסך 1 שלב ב').
  * Core principle (§5.ב): EVERY field is fully editable — including those that
- * will later be auto-filled by OCR — before saving.
+ * will later be auto-filled by OCR — before saving. Financial fields render in
+ * tabular mono, like a checkbook line.
  */
 export default function CheckForm({ values, onChange, ocrFilled, disabled }: Props) {
   function set<K extends keyof CheckFormValues>(key: K, value: string) {
     onChange({ ...values, [key]: value });
   }
 
-  const fieldClass =
-    "w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-slate-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 disabled:bg-slate-100";
-  const labelClass = "block text-sm font-medium text-slate-700";
+  const field =
+    "w-full rounded-lg border border-rule bg-card px-3 py-2.5 text-ink outline-none transition focus:border-valid focus:ring-2 focus:ring-valid-soft disabled:opacity-60";
+  const label = "block text-xs font-semibold tracking-wide text-ink-soft";
 
   return (
     <div className="space-y-4">
       <div>
-        <label className={labelClass} htmlFor="recipientName">
+        <label className={label} htmlFor="recipientName">
           שם החברה / המקבל
         </label>
         <input
@@ -42,13 +43,14 @@ export default function CheckForm({ values, onChange, ocrFilled, disabled }: Pro
           onChange={(e) => set("recipientName", e.target.value)}
           placeholder="הזנה ידנית"
           disabled={disabled}
-          className={`${fieldClass} mt-1`}
+          className={`${field} mt-1`}
         />
       </div>
 
       <div>
-        <label className={labelClass} htmlFor="checkNumber">
-          מספר צ'ק {ocrFilled && <span className="text-xs text-brand-600">(חולץ — ניתן לתיקון)</span>}
+        <label className={label} htmlFor="checkNumber">
+          מספר צ'ק{" "}
+          {ocrFilled && <span className="text-[0.7rem] text-valid">(חולץ — ניתן לתיקון)</span>}
         </label>
         <input
           id="checkNumber"
@@ -57,13 +59,13 @@ export default function CheckForm({ values, onChange, ocrFilled, disabled }: Pro
           value={values.checkNumber}
           onChange={(e) => set("checkNumber", e.target.value)}
           disabled={disabled}
-          className={`${fieldClass} mt-1`}
+          className={`${field} tnum mt-1`}
         />
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className={labelClass} htmlFor="amount">
+          <label className={label} htmlFor="amount">
             סכום הצ'ק (₪)
           </label>
           <input
@@ -73,11 +75,11 @@ export default function CheckForm({ values, onChange, ocrFilled, disabled }: Pro
             value={values.amount}
             onChange={(e) => set("amount", e.target.value)}
             disabled={disabled}
-            className={`${fieldClass} mt-1`}
+            className={`${field} tnum mt-1`}
           />
         </div>
         <div>
-          <label className={labelClass} htmlFor="writtenDate">
+          <label className={label} htmlFor="writtenDate">
             תאריך כתיבה
           </label>
           <input
@@ -86,7 +88,7 @@ export default function CheckForm({ values, onChange, ocrFilled, disabled }: Pro
             value={values.writtenDate}
             onChange={(e) => set("writtenDate", e.target.value)}
             disabled={disabled}
-            className={`${fieldClass} mt-1`}
+            className={`${field} tnum mt-1`}
           />
         </div>
       </div>

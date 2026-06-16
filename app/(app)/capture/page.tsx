@@ -130,24 +130,24 @@ export default function CapturePage() {
   return (
     <main className="mx-auto max-w-xl px-4 py-6">
       <header className="mb-6 flex items-center justify-between">
-        <h1 className="text-xl font-bold text-brand-700">קליטת צ'ק חדש</h1>
-        <Link href="/" className="text-sm text-slate-500 hover:text-slate-700">
-          ← חזרה
+        <h1 className="font-display text-2xl font-bold text-ink">קליטת צ'ק חדש</h1>
+        <Link href="/" className="text-sm text-ink-soft hover:text-ink">
+          חזרה →
         </Link>
       </header>
 
-      <section className="space-y-6 rounded-2xl bg-white p-5 shadow-sm">
+      <section className="space-y-6 rounded-xl border border-rule bg-card p-5">
         <CameraCapture imageDataUrl={image} onCapture={setImage} />
         <CheckForm values={values} onChange={setValues} disabled={busy} />
 
-        <div className="space-y-3 border-t border-slate-100 pt-4">
-          <p className="text-sm font-medium text-slate-600">בחירת פעולה:</p>
+        <div className="space-y-3 border-t border-rule pt-4">
+          <p className="text-xs font-semibold tracking-wide text-ink-soft">בחירת פעולה</p>
 
           <button
             type="button"
             onClick={saveNotDelivered}
             disabled={busy}
-            className="w-full rounded-xl bg-slate-700 px-4 py-3 font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
+            className="w-full rounded-lg border border-ink bg-ink px-4 py-3 font-semibold text-paper transition hover:bg-valid hover:border-valid disabled:opacity-60"
           >
             {busy ? "שומר…" : "שמור כלא נמסר"}
           </button>
@@ -156,7 +156,7 @@ export default function CapturePage() {
             type="button"
             onClick={startFrontalSign}
             disabled={busy}
-            className="w-full rounded-xl bg-brand-600 px-4 py-3 font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
+            className="w-full rounded-lg bg-valid px-4 py-3 font-semibold text-paper transition hover:opacity-90 disabled:opacity-60"
           >
             החתמה פרונטלית
           </button>
@@ -165,7 +165,7 @@ export default function CapturePage() {
             type="button"
             onClick={sendRemoteLink}
             disabled={busy}
-            className="w-full rounded-xl border border-brand-600 px-4 py-3 font-semibold text-brand-700 hover:bg-brand-50 disabled:opacity-60"
+            className="w-full rounded-lg border border-valid px-4 py-3 font-semibold text-valid transition hover:bg-valid-soft disabled:opacity-60"
           >
             שלח קישור לחתימה מרחוק
           </button>
@@ -174,14 +174,14 @@ export default function CapturePage() {
         {share && <SharePanel info={share} onClose={() => setShare(null)} />}
 
         {feedback.kind === "success" && (
-          <div className="rounded-lg bg-green-50 px-4 py-3 text-sm text-green-700">
-            <p>{feedback.message}</p>
+          <div className="rounded-lg border border-valid/30 bg-valid-soft px-4 py-3 text-sm text-valid">
+            <p className="font-medium">{feedback.message}</p>
             {feedback.fileUrl && (
               <a
                 href={feedback.fileUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-1 inline-block font-medium underline"
+                className="mt-1 inline-block font-semibold underline"
               >
                 צפייה ב-PDF החתום ←
               </a>
@@ -189,7 +189,9 @@ export default function CapturePage() {
           </div>
         )}
         {feedback.kind === "error" && (
-          <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{feedback.message}</p>
+          <p className="rounded-lg border border-stamp/30 bg-stamp-soft px-4 py-3 text-sm text-stamp">
+            {feedback.message}
+          </p>
         )}
       </section>
 

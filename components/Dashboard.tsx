@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import SignatureDialog from "@/components/SignatureDialog";
 import SharePanel, { type ShareInfo } from "@/components/SharePanel";
-import { STATUS_LABELS } from "@/lib/checks";
+import StatusStamp from "@/components/StatusStamp";
 import type { CheckRecord } from "@/lib/types";
 
 type Tab = "open" | "all";
@@ -79,17 +79,18 @@ export default function Dashboard() {
     }
   }
 
-  const th = "whitespace-nowrap px-3 py-2 text-right font-semibold text-slate-600";
-  const td = "whitespace-nowrap px-3 py-2 text-slate-700";
+  const th = "whitespace-nowrap px-3 py-2.5 text-right text-xs font-semibold tracking-wide text-ink-soft";
+  const td = "whitespace-nowrap px-3 py-3 text-ink";
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-6">
-      <header className="mb-5 flex items-center justify-between">
-        <h1 className="text-xl font-bold text-brand-700">דשבורד בקרה ומעקב</h1>
-        <Link href="/" className="text-sm text-slate-500 hover:text-slate-700">
-          ← חזרה
+      <header className="mb-1 flex items-center justify-between">
+        <h1 className="font-display text-2xl font-bold text-ink">פנקס הצ'קים</h1>
+        <Link href="/" className="text-sm text-ink-soft hover:text-ink">
+          חזרה →
         </Link>
       </header>
+      <p className="mb-5 text-sm text-ink-soft">בקרה ומעקב אחר הצ'קים היוצאים</p>
 
       <div className="mb-4 flex gap-2">
         <TabButton active={tab === "open"} onClick={() => setTab("open")}>
@@ -100,10 +101,10 @@ export default function Dashboard() {
         </TabButton>
       </div>
 
-      <div className="overflow-x-auto rounded-2xl bg-white shadow-sm">
+      <div className="overflow-x-auto rounded-xl border border-rule bg-card">
         <table className="w-full text-sm">
-          <thead className="border-b border-slate-100 bg-slate-50">
-            <tr>
+          <thead>
+            <tr className="border-b-2 border-ink/80">
               <th className={th}>מספר צ'ק</th>
               <th className={th}>שם המקבל</th>
               <th className={th}>תאריך כתיבה</th>
@@ -114,30 +115,40 @@ export default function Dashboard() {
               <th className={th}>{tab === "open" ? "פעולות" : "קובץ"}</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-rule">
             {loading ? (
               <tr>
-                <td className={td} colSpan={8}>
+                <td className={`${td} text-ink-soft`} colSpan={8}>
                   טוען…
                 </td>
               </tr>
             ) : rows.length === 0 ? (
               <tr>
-                <td className="px-3 py-6 text-center text-slate-400" colSpan={8}>
+                <td className="px-3 py-10 text-center text-ink-soft" colSpan={8}>
                   אין צ'קים להצגה
                 </td>
               </tr>
             ) : (
               rows.map((c) => (
-                <tr key={c.checkNumber}>
-                  <td className={`${td} font-medium`}>{c.checkNumber}</td>
-                  <td className={td}>{c.recipientName}</td>
-                  <td className={td}>{c.writtenDate}</td>
-                  <td className={td}>{money(c.amount)}</td>
+                <tr key={c.checkNumber} className="transition hover:bg-paper">
                   <td className={td}>
-                    <StatusBadge delivered={c.status === "delivered"} />
+                    <span className="tnum font-medium">#{c.checkNumber}</span>
                   </td>
-                  {tab === "all" && <td className={td}>{dateTime(c.deliveredAt)}</td>}
+                  <td className={`${td} font-medium`}>{c.recipientName}</td>
+                  <td className={td}>
+                    <span className="tnum text-ink-soft">{c.writtenDate}</span>
+                  </td>
+                  <td className={td}>
+                    <span className="tnum font-semibold">{money(c.amount)}</span>
+                  </td>
+                  <td className={td}>
+                    <StatusStamp delivered={c.status === "delivered"} size="sm" />
+                  </td>
+                  {tab === "all" && (
+                    <td className={td}>
+                      <span className="tnum text-ink-soft">{dateTime(c.deliveredAt)}</span>
+                    </td>
+                  )}
                   {tab === "all" && <td className={td}>{c.signerName ?? "—"}</td>}
                   <td className={td}>
                     {tab === "open" ? (
@@ -148,14 +159,14 @@ export default function Dashboard() {
                             setSignError(null);
                             setSignTarget(c);
                           }}
-                          className="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-700"
+                          className="rounded-lg bg-valid px-3 py-1.5 text-xs font-semibold text-paper transition hover:opacity-90"
                         >
                           החתמה לצד
                         </button>
                         <button
                           type="button"
                           onClick={() => shareAgain(c)}
-                          className="rounded-lg border border-brand-600 px-3 py-1.5 text-xs font-semibold text-brand-700 hover:bg-brand-50"
+                          className="rounded-lg border border-valid px-3 py-1.5 text-xs font-semibold text-valid transition hover:bg-valid-soft"
                         >
                           שתף שוב
                         </button>
@@ -165,12 +176,12 @@ export default function Dashboard() {
                         href={c.fileUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="font-medium text-brand-600 underline"
+                        className="font-semibold text-valid underline"
                       >
                         PDF
                       </a>
                     ) : (
-                      "—"
+                      <span className="text-ink-soft">—</span>
                     )}
                   </td>
                 </tr>
@@ -192,7 +203,7 @@ export default function Dashboard() {
       )}
 
       {share && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4">
           <div className="w-full max-w-md">
             <SharePanel info={share} onClose={() => setShare(null)} />
           </div>
@@ -200,7 +211,7 @@ export default function Dashboard() {
       )}
 
       {toast && (
-        <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-lg bg-red-600 px-4 py-2 text-sm text-white shadow-lg">
+        <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-lg bg-stamp px-4 py-2 text-sm text-paper shadow-lg">
           {toast}
         </div>
       )}
@@ -221,23 +232,13 @@ function TabButton({
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${
-        active ? "bg-brand-600 text-white" : "bg-white text-slate-600 shadow-sm hover:bg-slate-50"
+      className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
+        active
+          ? "bg-ink text-paper"
+          : "border border-rule bg-card text-ink-soft hover:border-ink hover:text-ink"
       }`}
     >
       {children}
     </button>
-  );
-}
-
-function StatusBadge({ delivered }: { delivered: boolean }) {
-  return (
-    <span
-      className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-        delivered ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"
-      }`}
-    >
-      {delivered ? STATUS_LABELS.delivered : STATUS_LABELS.not_delivered}
-    </span>
   );
 }

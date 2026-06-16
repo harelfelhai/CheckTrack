@@ -19,7 +19,8 @@ function formatDateTime(iso: string | null): string {
 
 /**
  * HTML template for the signed-check PDF (rendered to PDF by Puppeteer, which
- * handles Hebrew RTL + shaping natively). Images are passed as data URLs.
+ * handles Hebrew RTL + font shaping natively). Shares the app's "Ledger & Stamp"
+ * identity: serif display, mono financial data, status as an inked stamp.
  */
 export function buildCheckHtml(opts: {
   record: CheckRecord;
@@ -29,53 +30,71 @@ export function buildCheckHtml(opts: {
   const { record, checkImageDataUrl, signatureDataUrl } = opts;
   const delivered = record.status === "delivered";
 
-  const row = (label: string, value: string) => `
+  const row = (label: string, value: string, mono = false) => `
     <tr>
       <th>${esc(label)}</th>
-      <td>${esc(value)}</td>
+      <td class="${mono ? "mono" : ""}">${esc(value)}</td>
     </tr>`;
 
   return `<!doctype html>
 <html lang="he" dir="rtl">
 <head>
 <meta charset="utf-8" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&family=Frank+Ruhl+Libre:wght@700;900&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" />
 <style>
-  * { box-sizing: border-box; }
-  body {
-    font-family: "Segoe UI", "Arial", sans-serif;
-    color: #1e293b; margin: 0; padding: 32px;
+  :root {
+    --ink: #13211c; --ink-soft: #51605a; --valid: #0f5132;
+    --stamp: #a23b2b; --rule: #cdd6cf; --paper: #f6f8f4;
   }
-  h1 { color: #234e7e; font-size: 22px; margin: 0 0 4px; }
-  .sub { color: #64748b; font-size: 13px; margin-bottom: 20px; }
-  table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-  th, td { border: 1px solid #e2e8f0; padding: 8px 12px; text-align: right; font-size: 14px; }
-  th { background: #f1f5f9; width: 35%; font-weight: 600; color: #334155; }
-  .badge { display: inline-block; padding: 3px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; }
-  .delivered { background: #dcfce7; color: #166534; }
-  .pending { background: #fef9c3; color: #854d0e; }
-  .section-title { font-size: 14px; font-weight: 600; color: #334155; margin: 18px 0 8px; }
-  .scan img { max-width: 100%; max-height: 360px; border: 1px solid #e2e8f0; border-radius: 8px; }
-  .sign-box { border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; display: inline-block; min-width: 260px; }
+  * { box-sizing: border-box; }
+  body { font-family: "Assistant", Arial, sans-serif; color: var(--ink); margin: 0; padding: 32px; }
+  .head { display: flex; align-items: flex-start; justify-content: space-between; }
+  .eyebrow { font-family: "IBM Plex Mono", monospace; font-size: 11px; letter-spacing: 0.3em; color: var(--ink-soft); }
+  h1 { font-family: "Frank Ruhl Libre", Georgia, serif; color: var(--ink); font-size: 26px; margin: 4px 0 0; font-weight: 900; }
+  .sub { color: var(--ink-soft); font-size: 13px; margin-top: 2px; }
+
+  .stamp {
+    position: relative; display: inline-block; padding: 6px 16px;
+    border: 2.5px solid currentColor; border-radius: 7px;
+    font-family: "IBM Plex Mono", monospace; font-weight: 600; font-size: 15px;
+    letter-spacing: 0.18em; transform: rotate(-5deg); opacity: 0.92;
+  }
+  .stamp::before { content: ""; position: absolute; inset: 3px; border: 1px solid currentColor; border-radius: 4px; opacity: 0.55; }
+  .stamp.valid { color: var(--valid); }
+  .stamp.pending { color: var(--stamp); }
+
+  table { width: 100%; border-collapse: collapse; margin: 22px 0; }
+  th, td { border: 1px solid var(--rule); padding: 9px 12px; text-align: right; font-size: 14px; }
+  th { background: var(--paper); width: 35%; font-weight: 700; color: var(--ink-soft); }
+  td.mono { font-family: "IBM Plex Mono", monospace; font-variant-numeric: tabular-nums; }
+
+  .section-title { font-family: "Frank Ruhl Libre", serif; font-size: 15px; font-weight: 700; color: var(--ink); margin: 18px 0 8px; }
+  .scan img { max-width: 100%; max-height: 360px; border: 1px solid var(--rule); border-radius: 6px; }
+  .sign-box { border: 1px solid var(--rule); border-radius: 6px; padding: 12px; display: inline-block; min-width: 260px; }
   .sign-box img { max-height: 120px; }
-  .sign-meta { font-size: 13px; color: #475569; margin-top: 6px; }
-  .footer { margin-top: 28px; font-size: 11px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 8px; }
+  .sign-meta { font-family: "IBM Plex Mono", monospace; font-size: 12px; color: var(--ink-soft); margin-top: 6px; }
+  .footer { margin-top: 28px; font-family: "IBM Plex Mono", monospace; font-size: 10px; color: var(--rule); border-top: 1px solid var(--rule); padding-top: 8px; letter-spacing: 0.05em; }
 </style>
 </head>
 <body>
-  <h1>CheckTrack — אישור קבלת צ'ק</h1>
-  <div class="sub">מסמך תיעוד צ'ק יוצא</div>
+  <div class="head">
+    <div>
+      <div class="eyebrow">CHECKTRACK</div>
+      <h1>אישור קבלת צ'ק</h1>
+      <div class="sub">מסמך תיעוד צ'ק יוצא</div>
+    </div>
+    <div class="stamp ${delivered ? "valid" : "pending"}">${delivered ? "נמסר" : "לא נמסר"}</div>
+  </div>
 
   <table>
-    ${row("מספר צ'ק", record.checkNumber)}
+    ${row("מספר צ'ק", record.checkNumber, true)}
     ${row("שם המקבל", record.recipientName)}
-    ${row("תאריך כתיבת הצ'ק", record.writtenDate)}
-    ${row("סכום הצ'ק", formatAmount(record.amount))}
-    <tr>
-      <th>סטטוס</th>
-      <td><span class="badge ${delivered ? "delivered" : "pending"}">${delivered ? "נמסר" : "לא נמסר"}</span></td>
-    </tr>
+    ${row("תאריך כתיבת הצ'ק", record.writtenDate, true)}
+    ${row("סכום הצ'ק", formatAmount(record.amount), true)}
     ${delivered ? row("שם החותם", record.signerName ?? "—") : ""}
-    ${delivered ? row("תאריך ושעת מסירה", formatDateTime(record.deliveredAt)) : ""}
+    ${delivered ? row("תאריך ושעת מסירה", formatDateTime(record.deliveredAt), true) : ""}
   </table>
 
   ${

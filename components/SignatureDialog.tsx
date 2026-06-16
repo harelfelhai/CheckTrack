@@ -33,14 +33,14 @@ export default function SignatureDialog({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center">
-      <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl">
-        <h2 className="text-lg font-bold text-brand-700">{title}</h2>
-        {subtitle && <p className="mt-1 text-sm text-slate-500">{subtitle}</p>}
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 p-4 sm:items-center">
+      <div className="w-full max-w-md rounded-xl border border-rule bg-card p-5 shadow-xl">
+        <h2 className="font-display text-xl font-bold text-ink">{title}</h2>
+        {subtitle && <p className="mt-1 text-sm text-ink-soft">{subtitle}</p>}
 
         <div className="mt-4 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700" htmlFor="signerName">
+            <label className="block text-xs font-semibold tracking-wide text-ink-soft" htmlFor="signerName">
               שם החותם המלא
             </label>
             <input
@@ -49,19 +49,19 @@ export default function SignatureDialog({
               value={signerName}
               onChange={(e) => setSignerName(e.target.value)}
               disabled={submitting}
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+              className="mt-1 w-full rounded-lg border border-rule bg-paper px-3 py-2.5 text-ink outline-none transition focus:border-valid focus:ring-2 focus:ring-valid-soft"
             />
           </div>
 
           <div>
-            <span className="block text-sm font-medium text-slate-700">חתימה</span>
+            <span className="block text-xs font-semibold tracking-wide text-ink-soft">חתימה</span>
             <div className="mt-1">
               <SignaturePad onChange={setSignature} />
             </div>
           </div>
 
           {(localError || error) && (
-            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+            <p className="rounded-lg border border-stamp/30 bg-stamp-soft px-3 py-2 text-sm text-stamp">
               {localError ?? error}
             </p>
           )}
@@ -71,7 +71,7 @@ export default function SignatureDialog({
               type="button"
               onClick={confirm}
               disabled={submitting}
-              className="flex-1 rounded-xl bg-brand-600 px-4 py-3 font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
+              className="flex-1 rounded-lg bg-valid px-4 py-3 font-semibold text-paper transition hover:opacity-90 disabled:opacity-60"
             >
               {submitting ? "מעבד…" : "אישור וסגירה"}
             </button>
@@ -79,7 +79,7 @@ export default function SignatureDialog({
               type="button"
               onClick={onCancel}
               disabled={submitting}
-              className="rounded-xl border border-slate-300 px-4 py-3 font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-60"
+              className="rounded-lg border border-rule px-4 py-3 font-medium text-ink-soft transition hover:border-ink hover:text-ink disabled:opacity-60"
             >
               ביטול
             </button>

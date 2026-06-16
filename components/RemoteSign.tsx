@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import SignaturePad from "@/components/SignaturePad";
+import StatusStamp from "@/components/StatusStamp";
 
 interface CheckDetails {
   checkNumber: string;
@@ -18,7 +19,7 @@ type LoadState =
 
 function Centered({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-2xl bg-white p-8 text-center shadow-sm">{children}</div>
+    <div className="rounded-xl border border-rule bg-card p-8 text-center">{children}</div>
   );
 }
 
@@ -69,30 +70,35 @@ export default function RemoteSign({ token }: { token: string }) {
     }
   }
 
-  if (state.phase === "loading") {
-    return <Centered>טוען…</Centered>;
-  }
+  if (state.phase === "loading") return <Centered>טוען…</Centered>;
+
   if (state.phase === "invalid") {
     return (
       <Centered>
-        <p className="text-lg font-semibold text-red-600">הקישור אינו תקין</p>
-        <p className="mt-2 text-sm text-slate-500">ייתכן שפג תוקפו או שהוזן באופן שגוי.</p>
+        <p className="font-display text-xl font-bold text-stamp">הקישור אינו תקין</p>
+        <p className="mt-2 text-sm text-ink-soft">ייתכן שפג תוקפו או שהוזן באופן שגוי.</p>
       </Centered>
     );
   }
+
   if (state.phase === "used") {
     return (
       <Centered>
-        <p className="text-lg font-semibold text-slate-700">הצ'ק כבר נחתם</p>
-        <p className="mt-2 text-sm text-slate-500">קישור זה שימש כבר לחתימה ואינו פעיל עוד.</p>
+        <p className="font-display text-xl font-bold text-ink">הצ'ק כבר נחתם</p>
+        <p className="mt-2 text-sm text-ink-soft">קישור זה שימש כבר לחתימה ואינו פעיל עוד.</p>
       </Centered>
     );
   }
+
   if (state.phase === "done") {
     return (
       <Centered>
-        <div className="text-4xl">✅</div>
-        <p className="mt-3 text-lg font-semibold text-green-700">החתימה נקלטה בהצלחה, תודה!</p>
+        <div className="flex justify-center py-2">
+          <StatusStamp delivered />
+        </div>
+        <p className="mt-4 font-display text-xl font-bold text-valid">
+          החתימה נקלטה בהצלחה, תודה!
+        </p>
       </Centered>
     );
   }
@@ -100,18 +106,23 @@ export default function RemoteSign({ token }: { token: string }) {
   // phase === "ok"
   const { companyName, check } = state;
   return (
-    <div className="space-y-5 rounded-2xl bg-white p-5 shadow-sm">
-      <h1 className="text-xl font-bold text-brand-700">אישור קבלת צ'ק</h1>
+    <div className="space-y-5 rounded-xl border border-rule bg-card p-5">
+      <header>
+        <p className="tnum text-xs tracking-[0.3em] text-ink-soft">CHECKTRACK</p>
+        <h1 className="mt-1 font-display text-2xl font-bold text-ink">אישור קבלת צ'ק</h1>
+      </header>
 
-      <div className="rounded-xl bg-brand-50 p-4 text-sm leading-relaxed text-slate-700">
+      <div className="rounded-lg border border-valid/20 bg-valid-soft p-4 text-sm leading-relaxed text-ink">
         שלום, חברת <strong>{companyName}</strong> העבירה אליך את צ'ק מספר{" "}
-        <strong>{check.checkNumber}</strong> על סך{" "}
-        <strong>{new Intl.NumberFormat("he-IL").format(check.amount)} ש"ח</strong>, לזמן פירעון
-        ב-<strong>{check.writtenDate}</strong>.
+        <strong className="tnum">{check.checkNumber}</strong> על סך{" "}
+        <strong className="tnum">
+          {new Intl.NumberFormat("he-IL").format(check.amount)} ש״ח
+        </strong>
+        , לזמן פירעון ב־<strong className="tnum">{check.writtenDate}</strong>.
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-700" htmlFor="signerName">
+        <label className="block text-xs font-semibold tracking-wide text-ink-soft" htmlFor="signerName">
           שם החותם המלא
         </label>
         <input
@@ -121,24 +132,28 @@ export default function RemoteSign({ token }: { token: string }) {
           onChange={(e) => setSignerName(e.target.value)}
           disabled={submitting}
           placeholder="לדוגמה: ישראל ישראלי"
-          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+          className="mt-1 w-full rounded-lg border border-rule bg-paper px-3 py-2.5 text-ink outline-none transition focus:border-valid focus:ring-2 focus:ring-valid-soft"
         />
       </div>
 
       <div>
-        <span className="block text-sm font-medium text-slate-700">חתימה</span>
+        <span className="block text-xs font-semibold tracking-wide text-ink-soft">חתימה</span>
         <div className="mt-1">
           <SignaturePad onChange={setSignature} />
         </div>
       </div>
 
-      {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
+      {error && (
+        <p className="rounded-lg border border-stamp/30 bg-stamp-soft px-3 py-2 text-sm text-stamp">
+          {error}
+        </p>
+      )}
 
       <button
         type="button"
         onClick={submit}
         disabled={submitting}
-        className="w-full rounded-xl bg-brand-600 px-4 py-3 font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
+        className="w-full rounded-lg bg-valid px-4 py-3 font-semibold text-paper transition hover:opacity-90 disabled:opacity-60"
       >
         {submitting ? "שולח…" : "אישור ושליחה"}
       </button>

@@ -11,9 +11,10 @@ export default async function SignInPage() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-5">
-      <div className="rounded-2xl bg-white p-8 text-center shadow-sm">
-        <h1 className="text-2xl font-bold text-brand-700">CheckTrack</h1>
-        <p className="mt-2 text-sm text-slate-500">מערכת ניהול צ'קים יוצאים</p>
+      <div className="rounded-xl border border-rule bg-card p-8 text-center">
+        <p className="tnum text-xs tracking-[0.3em] text-ink-soft">CHECKTRACK</p>
+        <h1 className="mt-2 font-display text-2xl font-bold text-ink">פנקס הצ'קים</h1>
+        <p className="mt-1 text-sm text-ink-soft">מערכת ניהול צ'קים יוצאים</p>
 
         <form
           action={async () => {
@@ -24,15 +25,13 @@ export default async function SignInPage() {
         >
           <button
             type="submit"
-            className="w-full rounded-xl bg-brand-600 px-4 py-3 font-semibold text-white hover:bg-brand-700"
+            className="w-full rounded-lg border border-ink bg-ink px-4 py-3 font-semibold text-paper transition hover:border-valid hover:bg-valid"
           >
             התחברות עם Google
           </button>
         </form>
 
-        <p className="mt-4 text-xs text-slate-400">
-          הגישה מוגבלת למשתמשים מורשים בלבד.
-        </p>
+        <p className="mt-4 text-xs text-ink-soft">הגישה מוגבלת למשתמשים מורשים בלבד.</p>
       </div>
     </main>
   );

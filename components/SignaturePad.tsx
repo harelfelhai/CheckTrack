@@ -24,7 +24,7 @@ export default function SignaturePad({ onChange }: Props) {
 
     const pad = new SignaturePadLib(canvas, {
       backgroundColor: "rgb(255,255,255)",
-      penColor: "rgb(15,23,42)",
+      penColor: "rgb(19,33,28)",
     });
     padRef.current = pad;
 
@@ -60,12 +60,12 @@ export default function SignaturePad({ onChange }: Props) {
     <div className="space-y-2">
       <canvas
         ref={canvasRef}
-        className="h-44 w-full touch-none rounded-lg border border-slate-300 bg-white"
+        className="h-44 w-full touch-none rounded-lg border border-rule bg-white"
       />
       <button
         type="button"
         onClick={clear}
-        className="text-sm text-slate-500 hover:text-slate-700"
+        className="text-sm text-ink-soft hover:text-ink"
       >
         נקה חתימה
       </button>

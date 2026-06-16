@@ -1,12 +1,23 @@
 @import "tailwindcss";
 
+/* ── "Ledger & Stamp" design system ───────────────────────────────
+   Palette drawn from real check stock: safety-paper green-grey,
+   intaglio blue-black ink, banknote green, vermilion stamp ink. */
 @theme {
-  --font-sans: "Segoe UI", "Heebo", "Rubik", "Assistant", system-ui, -apple-system,
-    "Helvetica Neue", Arial, sans-serif;
-  --color-brand-50: #eef4fb;
-  --color-brand-500: #2f6db0;
-  --color-brand-600: #2a5f99;
-  --color-brand-700: #234e7e;
+  --font-sans: "Assistant", system-ui, -apple-system, sans-serif;
+  --font-display: "Frank Ruhl Libre", Georgia, "Times New Roman", serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "Courier New", monospace;
+
+  --color-paper: #e9efe8;
+  --color-card: #f6f8f4;
+  --color-ink: #13211c;
+  --color-ink-soft: #51605a;
+  --color-valid: #0f5132;
+  --color-valid-soft: #e0ebe4;
+  --color-stamp: #a23b2b;
+  --color-stamp-soft: #f1e0db;
+  --color-amber: #8a5e12;
+  --color-rule: #cdd6cf;
 }
 
 html {
@@ -15,11 +26,71 @@ html {
 
 body {
   font-family: var(--font-sans);
+  background-color: var(--color-paper);
+  color: var(--color-ink);
 }
 
-/* Inputs inherit RTL direction from <html dir="rtl"> but keep numeric fields readable. */
+/* Tabular figures for all financial data (check #, amount, date). */
+.tnum {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Numeric inputs read left-to-right even inside the RTL document. */
 input[inputmode="numeric"],
-input[type="number"] {
+input[type="number"],
+input[type="date"] {
   direction: ltr;
   text-align: right;
+}
+
+/* ── Signature element: the rubber stamp ──────────────────────────
+   Double-ruled border + slight rotation = an inked impression.
+   Color comes from `currentColor` so callers set the ink. */
+.stamp {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.75rem;
+  border: 2px solid currentColor;
+  border-radius: 0.45rem;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.18em;
+  line-height: 1.4;
+  transform: rotate(-4deg);
+  opacity: 0.9;
+  user-select: none;
+}
+.stamp::before {
+  content: "";
+  position: absolute;
+  inset: 2.5px;
+  border: 1px solid currentColor;
+  border-radius: 0.3rem;
+  opacity: 0.55;
+}
+.stamp--valid {
+  color: var(--color-valid);
+}
+.stamp--pending {
+  color: var(--color-stamp);
+}
+
+/* A check's MICR band, evoked as a register divider. */
+.micr-rule {
+  font-family: var(--font-mono);
+  letter-spacing: 0.35em;
+  color: var(--color-rule);
+  font-size: 0.7rem;
+  user-select: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
