@@ -35,8 +35,9 @@ export function isAllowedEmail(email?: string | null): boolean {
   return false;
 }
 
-/** Path prefixes that require an authenticated, allowed user. */
-export const PROTECTED_PAGES = ["/capture", "/dashboard"];
+/** Path prefixes that require an authenticated, allowed user. The home page is
+ *  gated too, so an unauthenticated visitor lands on the sign-in screen. */
+export const PROTECTED_PAGES = ["/", "/capture", "/dashboard"];
 export const PROTECTED_API = ["/api/checks", "/api/share"];
 
 export function isProtectedPath(pathname: string): boolean {

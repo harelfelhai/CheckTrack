@@ -184,78 +184,99 @@ export default function CapturePage() {
       </header>
 
       <section className="space-y-6 rounded-xl border border-rule bg-card p-5">
-        <CameraCapture imageDataUrl={image} onCapture={setImage} />
-
-        {image && (
-          <button
-            type="button"
-            onClick={runOcrExtract}
-            disabled={ocrBusy || busy}
-            className="w-full rounded-lg border border-rule bg-card px-4 py-2.5 text-sm font-semibold text-ink-soft transition hover:border-valid hover:text-valid disabled:opacity-60"
-          >
-            {ocrBusy ? "מחלץ נתונים…" : "✦ חילוץ אוטומטי (OCR)"}
-          </button>
-        )}
-        {ocrNotice && (
-          <p className="rounded-lg border border-rule bg-paper px-3 py-2 text-xs text-ink-soft">
-            {ocrNotice}
-          </p>
-        )}
-
-        <CheckForm values={values} onChange={setValues} disabled={busy} ocrFilled={ocrFilled} />
-
-        <div className="space-y-3 border-t border-rule pt-4">
-          <p className="text-xs font-semibold tracking-wide text-ink-soft">בחירת פעולה</p>
-
-          <button
-            type="button"
-            onClick={saveNotDelivered}
-            disabled={busy}
-            className="w-full rounded-lg border border-ink bg-ink px-4 py-3 font-semibold text-paper transition hover:bg-valid hover:border-valid disabled:opacity-60"
-          >
-            {busy ? "שומר…" : "שמור כלא נמסר"}
-          </button>
-
-          <button
-            type="button"
-            onClick={startFrontalSign}
-            disabled={busy}
-            className="w-full rounded-lg bg-valid px-4 py-3 font-semibold text-paper transition hover:opacity-90 disabled:opacity-60"
-          >
-            החתמה פרונטלית
-          </button>
-
-          <button
-            type="button"
-            onClick={sendRemoteLink}
-            disabled={busy}
-            className="w-full rounded-lg border border-valid px-4 py-3 font-semibold text-valid transition hover:bg-valid-soft disabled:opacity-60"
-          >
-            שלח קישור לחתימה מרחוק
-          </button>
-        </div>
-
-        {share && <SharePanel info={share} onClose={() => setShare(null)} />}
-
-        {feedback.kind === "success" && (
-          <div className="rounded-lg border border-valid/30 bg-valid-soft px-4 py-3 text-sm text-valid">
-            <p className="font-medium">{feedback.message}</p>
+        {feedback.kind === "success" ? (
+          <div className="space-y-5 py-2 text-center">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-valid-soft text-3xl text-valid">
+              ✓
+            </div>
+            <p className="font-display text-xl font-bold text-valid">{feedback.message}</p>
             {feedback.fileUrl && (
               <a
                 href={feedback.fileUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-1 inline-block font-semibold underline"
+                className="inline-block text-sm font-semibold text-valid underline"
               >
                 צפייה ב-PDF החתום ←
               </a>
             )}
+            <div className="grid gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setFeedback({ kind: "idle" })}
+                className="w-full rounded-lg border border-ink bg-ink px-4 py-3 font-semibold text-paper transition hover:bg-valid hover:border-valid"
+              >
+                קליטת צ'ק חדש
+              </button>
+              <Link
+                href="/dashboard"
+                className="w-full rounded-lg border border-valid px-4 py-3 text-center font-semibold text-valid transition hover:bg-valid-soft"
+              >
+                מעקב צ'קים
+              </Link>
+            </div>
           </div>
-        )}
-        {feedback.kind === "error" && (
-          <p className="rounded-lg border border-stamp/30 bg-stamp-soft px-4 py-3 text-sm text-stamp">
-            {feedback.message}
-          </p>
+        ) : (
+          <>
+            <CameraCapture imageDataUrl={image} onCapture={setImage} />
+
+            {image && (
+              <button
+                type="button"
+                onClick={runOcrExtract}
+                disabled={ocrBusy || busy}
+                className="w-full rounded-lg border border-rule bg-card px-4 py-2.5 text-sm font-semibold text-ink-soft transition hover:border-valid hover:text-valid disabled:opacity-60"
+              >
+                {ocrBusy ? "מחלץ נתונים…" : "✦ חילוץ אוטומטי (OCR)"}
+              </button>
+            )}
+            {ocrNotice && (
+              <p className="rounded-lg border border-rule bg-paper px-3 py-2 text-xs text-ink-soft">
+                {ocrNotice}
+              </p>
+            )}
+
+            <CheckForm values={values} onChange={setValues} disabled={busy} ocrFilled={ocrFilled} />
+
+            <div className="space-y-3 border-t border-rule pt-4">
+              <p className="text-xs font-semibold tracking-wide text-ink-soft">בחירת פעולה</p>
+
+              <button
+                type="button"
+                onClick={saveNotDelivered}
+                disabled={busy}
+                className="w-full rounded-lg border border-ink bg-ink px-4 py-3 font-semibold text-paper transition hover:bg-valid hover:border-valid disabled:opacity-60"
+              >
+                {busy ? "שומר…" : "שמור כלא נמסר"}
+              </button>
+
+              <button
+                type="button"
+                onClick={startFrontalSign}
+                disabled={busy}
+                className="w-full rounded-lg bg-valid px-4 py-3 font-semibold text-paper transition hover:opacity-90 disabled:opacity-60"
+              >
+                החתמה פרונטלית
+              </button>
+
+              <button
+                type="button"
+                onClick={sendRemoteLink}
+                disabled={busy}
+                className="w-full rounded-lg border border-valid px-4 py-3 font-semibold text-valid transition hover:bg-valid-soft disabled:opacity-60"
+              >
+                שלח קישור לחתימה מרחוק
+              </button>
+            </div>
+
+            {share && <SharePanel info={share} onClose={() => setShare(null)} />}
+
+            {feedback.kind === "error" && (
+              <p className="rounded-lg border border-stamp/30 bg-stamp-soft px-4 py-3 text-sm text-stamp">
+                {feedback.message}
+              </p>
+            )}
+          </>
         )}
       </section>
 
