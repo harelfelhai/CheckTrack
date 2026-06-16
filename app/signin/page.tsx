@@ -2,6 +2,11 @@ import { redirect } from "next/navigation";
 import { signIn, auth } from "@/auth";
 import { isAuthEnabled } from "@/lib/auth-config";
 
+// Render at request time, not at build. Otherwise the production build (which
+// has no Google env vars) prerenders this as a permanent redirect to "/",
+// breaking sign-in in deployment. Auth env is only present at runtime.
+export const dynamic = "force-dynamic";
+
 // Sign-in screen (spec §5.ג). Server component with a Google sign-in action.
 export default async function SignInPage() {
   // If auth is disabled (dev) or already signed in, skip straight to the app.
