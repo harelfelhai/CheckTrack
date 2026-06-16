@@ -9,7 +9,12 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "google:auth": "node --env-file=.env.local scripts/google-auth.mjs",
+    "google:init": "node --env-file=.env.local scripts/google-init.mjs",
+    "google:verify": "node --env-file=.env.local scripts/google-verify.mjs",
+    "google:e2e": "node --env-file=.env.local scripts/google-e2e.mjs",
+    "vision:sample": "node --env-file=.env.local scripts/vision-sample.mjs"
   },
   "dependencies": {
     "googleapis": "^173.0.0",

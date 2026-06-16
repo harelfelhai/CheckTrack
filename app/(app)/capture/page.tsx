@@ -28,12 +28,59 @@ export default function CapturePage() {
   const [signing, setSigning] = useState(false);
   const [signError, setSignError] = useState<string | null>(null);
   const [share, setShare] = useState<ShareInfo | null>(null);
+  const [ocrBusy, setOcrBusy] = useState(false);
+  const [ocrFilled, setOcrFilled] = useState(false);
+  const [ocrNotice, setOcrNotice] = useState<string | null>(null);
 
   const busy = feedback.kind === "saving";
 
   function reset() {
     setValues(EMPTY);
     setImage(null);
+    setOcrFilled(false);
+    setOcrNotice(null);
+  }
+
+  /** OCR draft fill (spec §5.ב) — fields stay editable; never overwrites a
+   *  value the user already typed. */
+  async function runOcrExtract() {
+    if (!image) return;
+    setOcrBusy(true);
+    setOcrNotice(null);
+    try {
+      const res = await fetch("/api/ocr", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageDataUrl: image }),
+      });
+      const data = (await res.json()) as {
+        enabled?: boolean;
+        checkNumber?: string | null;
+        amount?: string | null;
+        writtenDate?: string | null;
+        error?: string;
+      };
+      if (!res.ok) throw new Error(data.error ?? "החילוץ נכשל");
+      if (!data.enabled) {
+        setOcrNotice("חילוץ אוטומטי אינו מוגדר (הגדר GOOGLE_VISION_API_KEY). מלא ידנית.");
+        return;
+      }
+      const any = data.checkNumber || data.amount || data.writtenDate;
+      setValues((v) => ({
+        ...v,
+        checkNumber: v.checkNumber || (data.checkNumber ?? ""),
+        amount: v.amount || (data.amount ?? ""),
+        writtenDate: v.writtenDate || (data.writtenDate ?? ""),
+      }));
+      setOcrFilled(true);
+      setOcrNotice(
+        any ? "השדות מולאו אוטומטית — בדוק ותקן לפני שמירה." : "לא זוהו שדות. מלא ידנית.",
+      );
+    } catch (e) {
+      setOcrNotice(e instanceof Error ? e.message : "החילוץ נכשל");
+    } finally {
+      setOcrBusy(false);
+    }
   }
 
   /** Create the check row (status "not delivered"). Returns true on success. */
@@ -138,7 +185,24 @@ export default function CapturePage() {
 
       <section className="space-y-6 rounded-xl border border-rule bg-card p-5">
         <CameraCapture imageDataUrl={image} onCapture={setImage} />
-        <CheckForm values={values} onChange={setValues} disabled={busy} />
+
+        {image && (
+          <button
+            type="button"
+            onClick={runOcrExtract}
+            disabled={ocrBusy || busy}
+            className="w-full rounded-lg border border-rule bg-card px-4 py-2.5 text-sm font-semibold text-ink-soft transition hover:border-valid hover:text-valid disabled:opacity-60"
+          >
+            {ocrBusy ? "מחלץ נתונים…" : "✦ חילוץ אוטומטי (OCR)"}
+          </button>
+        )}
+        {ocrNotice && (
+          <p className="rounded-lg border border-rule bg-paper px-3 py-2 text-xs text-ink-soft">
+            {ocrNotice}
+          </p>
+        )}
+
+        <CheckForm values={values} onChange={setValues} disabled={busy} ocrFilled={ocrFilled} />
 
         <div className="space-y-3 border-t border-rule pt-4">
           <p className="text-xs font-semibold tracking-wide text-ink-soft">בחירת פעולה</p>

@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Self-contained server bundle for the container image (Cloud Run).
+  output: "standalone",
   // Pin the workspace root to this project (a stray lockfile exists in $HOME).
   outputFileTracingRoot: import.meta.dirname,
   // Server-only packages that should not be bundled for the browser.
