@@ -10,10 +10,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         Google({
           clientId: process.env.GOOGLE_CLIENT_ID!,
           clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+          // Always show the Google account chooser, so a blocked user can
+          // retry with a different (authorized) account instead of being
+          // silently re-logged into the same denied one.
+          authorization: { params: { prompt: "select_account" } },
         }),
       ]
     : [],
-  pages: { signIn: "/signin" },
+  // Route auth errors (e.g. AccessDenied from the allowlist) back to our own
+  // sign-in screen, which renders a friendly message — not NextAuth's default
+  // error page.
+  pages: { signIn: "/signin", error: "/signin" },
   callbacks: {
     // Enforce the email allowlist at sign-in (spec §5.ג).
     signIn({ profile }) {

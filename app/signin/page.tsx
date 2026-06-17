@@ -8,11 +8,19 @@ import { isAuthEnabled } from "@/lib/auth-config";
 export const dynamic = "force-dynamic";
 
 // Sign-in screen (spec §5.ג). Server component with a Google sign-in action.
-export default async function SignInPage() {
+export default async function SignInPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
   // If auth is disabled (dev) or already signed in, skip straight to the app.
   if (!isAuthEnabled()) redirect("/");
   const session = await auth();
   if (session?.user) redirect("/");
+
+  // NextAuth redirects a blocked sign-in here with ?error=AccessDenied.
+  const { error } = await searchParams;
+  const accessDenied = error === "AccessDenied";
 
   return (
     <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-5">
@@ -20,6 +28,15 @@ export default async function SignInPage() {
         <p className="tnum text-xs tracking-[0.3em] text-ink-soft">CHECKTRACK</p>
         <h1 className="mt-2 font-display text-2xl font-bold text-ink">פנקס הצ'קים</h1>
         <p className="mt-1 text-sm text-ink-soft">מערכת ניהול צ'קים יוצאים</p>
+
+        {accessDenied && (
+          <div className="mt-6 rounded-lg border border-stamp bg-stamp-soft p-3 text-center">
+            <p className="font-semibold text-stamp">הכניסה למורשים בלבד</p>
+            <p className="mt-1 text-xs text-ink-soft">
+              החשבון שבחרת אינו מורשה לגשת למערכת. נסה להתחבר עם חשבון אחר.
+            </p>
+          </div>
+        )}
 
         <form
           action={async () => {
@@ -32,7 +49,7 @@ export default async function SignInPage() {
             type="submit"
             className="w-full rounded-lg border border-ink bg-ink px-4 py-3 font-semibold text-paper transition hover:border-valid hover:bg-valid"
           >
-            התחברות עם Google
+            {accessDenied ? "התחברות עם חשבון אחר" : "התחברות עם Google"}
           </button>
         </form>
 
