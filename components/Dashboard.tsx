@@ -25,6 +25,19 @@ export default function Dashboard() {
   const [share, setShare] = useState<ShareInfo | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
+  // Archive (tab 2) filtering + sorting — spec §4, מסך 2, טאב 2.
+  const [q, setQ] = useState("");
+  const [wFrom, setWFrom] = useState("");
+  const [wTo, setWTo] = useState("");
+  const [dFrom, setDFrom] = useState("");
+  const [dTo, setDTo] = useState("");
+  const [amtMin, setAmtMin] = useState("");
+  const [amtMax, setAmtMax] = useState("");
+  const [sortKey, setSortKey] = useState<
+    "writtenDate" | "deliveredAt" | "amount" | "recipientName"
+  >("writtenDate");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+
   const load = useCallback(async () => {
     setLoading(true);
     try {
@@ -41,7 +54,45 @@ export default function Dashboard() {
   }, [load]);
 
   const open = checks.filter((c) => c.status !== "delivered");
-  const rows = tab === "open" ? open : checks;
+
+  function filterSortArchive(list: CheckRecord[]): CheckRecord[] {
+    const term = q.trim().toLowerCase();
+    const min = amtMin === "" ? null : Number(amtMin);
+    const max = amtMax === "" ? null : Number(amtMax);
+    const out = list.filter((c) => {
+      if (term && !`${c.recipientName} ${c.checkNumber}`.toLowerCase().includes(term)) return false;
+      if (wFrom && c.writtenDate < wFrom) return false;
+      if (wTo && c.writtenDate > wTo) return false;
+      const dDate = (c.deliveredAt ?? "").slice(0, 10);
+      if (dFrom && (!dDate || dDate < dFrom)) return false;
+      if (dTo && (!dDate || dDate > dTo)) return false;
+      if (min != null && Number.isFinite(min) && c.amount < min) return false;
+      if (max != null && Number.isFinite(max) && c.amount > max) return false;
+      return true;
+    });
+    out.sort((a, b) => {
+      const cmp =
+        sortKey === "amount"
+          ? a.amount - b.amount
+          : sortKey === "recipientName"
+            ? a.recipientName.localeCompare(b.recipientName, "he")
+            : (a[sortKey] ?? "").toString().localeCompare((b[sortKey] ?? "").toString());
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+    return out;
+  }
+
+  const rows = tab === "open" ? open : filterSortArchive(checks);
+
+  function clearFilters() {
+    setQ("");
+    setWFrom("");
+    setWTo("");
+    setDFrom("");
+    setDTo("");
+    setAmtMin("");
+    setAmtMax("");
+  }
 
   async function confirmSign(signerName: string, signatureDataUrl: string) {
     if (!signTarget) return;
@@ -81,6 +132,8 @@ export default function Dashboard() {
 
   const th = "whitespace-nowrap px-3 py-2.5 text-right text-xs font-semibold tracking-wide text-ink-soft";
   const td = "whitespace-nowrap px-3 py-3 text-ink";
+  const fl = "block text-[0.7rem] font-semibold text-ink-soft";
+  const fi = "mt-1 w-full rounded-lg border border-rule bg-paper px-2.5 py-2 text-sm text-ink outline-none focus:border-valid";
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-6">
@@ -100,6 +153,68 @@ export default function Dashboard() {
           ארכיון כל הצ'קים ({checks.length})
         </TabButton>
       </div>
+
+      {tab === "all" && (
+        <div className="mb-4 grid grid-cols-2 gap-3 rounded-xl border border-rule bg-card p-4 sm:grid-cols-3 lg:grid-cols-4">
+          <div className="col-span-2 sm:col-span-1">
+            <label className={fl}>חיפוש (שם / מספר)</label>
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="הקלד לסינון" className={fi} />
+          </div>
+          <div>
+            <label className={fl}>תאריך כתיבה — מ־</label>
+            <input type="date" value={wFrom} onChange={(e) => setWFrom(e.target.value)} className={fi} />
+          </div>
+          <div>
+            <label className={fl}>תאריך כתיבה — עד</label>
+            <input type="date" value={wTo} onChange={(e) => setWTo(e.target.value)} className={fi} />
+          </div>
+          <div>
+            <label className={fl}>תאריך מסירה — מ־</label>
+            <input type="date" value={dFrom} onChange={(e) => setDFrom(e.target.value)} className={fi} />
+          </div>
+          <div>
+            <label className={fl}>תאריך מסירה — עד</label>
+            <input type="date" value={dTo} onChange={(e) => setDTo(e.target.value)} className={fi} />
+          </div>
+          <div>
+            <label className={fl}>סכום — מ־</label>
+            <input type="number" inputMode="numeric" value={amtMin} onChange={(e) => setAmtMin(e.target.value)} className={fi} />
+          </div>
+          <div>
+            <label className={fl}>סכום — עד</label>
+            <input type="number" inputMode="numeric" value={amtMax} onChange={(e) => setAmtMax(e.target.value)} className={fi} />
+          </div>
+          <div>
+            <label className={fl}>מיון לפי</label>
+            <select
+              value={sortKey}
+              onChange={(e) => setSortKey(e.target.value as typeof sortKey)}
+              className={fi}
+            >
+              <option value="writtenDate">תאריך כתיבה</option>
+              <option value="deliveredAt">תאריך מסירה</option>
+              <option value="amount">סכום</option>
+              <option value="recipientName">שם המקבל</option>
+            </select>
+          </div>
+          <div className="col-span-2 flex items-end gap-2 sm:col-span-1">
+            <button
+              type="button"
+              onClick={() => setSortDir((d) => (d === "asc" ? "desc" : "asc"))}
+              className="flex-1 rounded-lg border border-rule bg-card px-3 py-2 text-sm font-medium text-ink hover:border-ink"
+            >
+              {sortDir === "asc" ? "↑ עולה" : "↓ יורד"}
+            </button>
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="rounded-lg border border-rule bg-card px-3 py-2 text-sm font-medium text-ink-soft hover:text-ink"
+            >
+              נקה
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="overflow-x-auto rounded-xl border border-rule bg-card">
         <table className="w-full text-sm">

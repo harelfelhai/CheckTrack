@@ -64,6 +64,7 @@ await sheets.spreadsheets.batchUpdate({
     requests: [
       { updateSheetProperties: { properties: { sheetId: firstSheetId, title: TAB }, fields: "title" } },
       { addSheet: { properties: { title: "UsedTokens" } } },
+      { addSheet: { properties: { title: "Images" } } },
     ],
   },
 });

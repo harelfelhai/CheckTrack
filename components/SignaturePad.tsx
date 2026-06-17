@@ -30,12 +30,20 @@ export default function SignaturePad({ onChange }: Props) {
 
     function resize() {
       if (!canvas) return;
-      const ratio = Math.max(window.devicePixelRatio || 1, 1);
       const rect = canvas.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return; // hidden — skip
+      // Preserve any existing strokes so the signature survives a resize
+      // (mobile keyboard opening for the name field, or screen rotation).
+      const data = pad.toData();
+      const ratio = Math.max(window.devicePixelRatio || 1, 1);
       canvas.width = rect.width * ratio;
       canvas.height = rect.height * ratio;
       canvas.getContext("2d")?.scale(ratio, ratio);
-      pad.clear();
+      pad.clear(); // changing canvas size wipes the bitmap; reset internal state
+      if (data.length) {
+        pad.fromData(data);
+        onChangeRef.current(pad.isEmpty() ? null : pad.toDataURL("image/png"));
+      }
     }
 
     const handleEnd = () =>
