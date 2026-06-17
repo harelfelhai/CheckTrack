@@ -37,3 +37,12 @@ yarn-error.log*
 # local sample check images for OCR tuning — never commit real cheques (PII)
 sample-check.*
 /samples/
+
+# loose images dropped at the repo root (e.g. WhatsApp cheque photos = PII).
+# Real app assets live under app/ and public/, which are NOT ignored.
+/*.jpg
+/*.jpeg
+/*.png
+/*.webp
+/*.gif
+/WhatsApp Image*
