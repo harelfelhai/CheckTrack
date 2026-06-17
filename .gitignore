@@ -33,3 +33,7 @@ yarn-error.log*
 # playwright MCP scratch output (snapshots/screenshots written during UI probes)
 /.playwright-mcp
 /test-results
+
+# local sample check images for OCR tuning — never commit real cheques (PII)
+sample-check.*
+/samples/
