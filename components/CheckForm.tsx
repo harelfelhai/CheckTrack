@@ -34,7 +34,7 @@ export default function CheckForm({ values, onChange, ocrFilled, disabled }: Pro
     <div className="space-y-4">
       <div>
         <label className={label} htmlFor="recipientName">
-          שם החברה / המקבל
+          שם המוטב (בית העסק)
         </label>
         <input
           id="recipientName"
@@ -66,7 +66,7 @@ export default function CheckForm({ values, onChange, ocrFilled, disabled }: Pro
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className={label} htmlFor="amount">
-            סכום הצ'ק (₪)
+            סכום הצ'ק (₪, כולל מע"מ)
           </label>
           <input
             id="amount"
@@ -80,7 +80,7 @@ export default function CheckForm({ values, onChange, ocrFilled, disabled }: Pro
         </div>
         <div>
           <label className={label} htmlFor="writtenDate">
-            תאריך כתיבה
+            תאריך פירעון
           </label>
           <input
             id="writtenDate"

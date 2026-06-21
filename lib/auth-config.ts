@@ -22,6 +22,23 @@ export function getAllowedDomain(): string | null {
   return process.env.AUTH_ALLOWED_DOMAIN?.trim().toLowerCase() || null;
 }
 
+/** Manager emails (env AUTH_MANAGER_EMAILS, comma-separated). Managers get the
+ *  extra control-screen actions: revert status, delete a check. */
+export function getManagerEmails(): string[] {
+  return (process.env.AUTH_MANAGER_EMAILS || "")
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+/** Whether a signed-in email is a manager. When no managers are configured,
+ *  auth is off (dev) → treat as manager so the actions are testable locally. */
+export function isManager(email?: string | null): boolean {
+  if (!isAuthEnabled()) return true;
+  if (!email) return false;
+  return getManagerEmails().includes(email.toLowerCase());
+}
+
 /** Whether a signed-in email is permitted into screens 1–2. */
 export function isAllowedEmail(email?: string | null): boolean {
   if (!email) return false;

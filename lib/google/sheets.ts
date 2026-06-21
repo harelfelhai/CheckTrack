@@ -65,7 +65,7 @@ export async function listRows(): Promise<CheckRecord[]> {
   const sheets = getSheetsApi();
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: spreadsheetId(),
-    range: `${tab()}!A2:H`,
+    range: `${tab()}!A2:I`,
   });
   const rows = res.data.values ?? [];
   return rows
@@ -77,7 +77,7 @@ export async function appendRow(record: CheckRecord): Promise<void> {
   const sheets = getSheetsApi();
   await sheets.spreadsheets.values.append({
     spreadsheetId: spreadsheetId(),
-    range: `${tab()}!A:H`,
+    range: `${tab()}!A:I`,
     valueInputOption: "RAW",
     requestBody: { values: [recordToRow(record)] },
   });
@@ -98,10 +98,78 @@ export async function updateRow(rowNumber: number, record: CheckRecord): Promise
   const sheets = getSheetsApi();
   await sheets.spreadsheets.values.update({
     spreadsheetId: spreadsheetId(),
-    range: `${tab()}!A${rowNumber}:H${rowNumber}`,
+    range: `${tab()}!A${rowNumber}:I${rowNumber}`,
     valueInputOption: "RAW",
     requestBody: { values: [recordToRow(record)] },
   });
+}
+
+/** Numeric sheetId (gid) of a tab, needed for structural edits (row delete). */
+async function getSheetId(title: string): Promise<number | null> {
+  const sheets = getSheetsApi();
+  const meta = await sheets.spreadsheets.get({
+    spreadsheetId: spreadsheetId(),
+    fields: "sheets.properties(sheetId,title)",
+  });
+  const found = (meta.data.sheets ?? []).find((s) => s.properties?.title === title);
+  return found?.properties?.sheetId ?? null;
+}
+
+/** Permanently deletes a data row (1-based, as returned by findRowNumber). */
+export async function deleteRowByNumber(rowNumber: number): Promise<void> {
+  const sheets = getSheetsApi();
+  const sheetId = await getSheetId(tab());
+  if (sheetId == null) throw new Error("לא נמצא הגיליון למחיקה");
+  await sheets.spreadsheets.batchUpdate({
+    spreadsheetId: spreadsheetId(),
+    requestBody: {
+      requests: [
+        {
+          deleteDimension: {
+            range: {
+              sheetId,
+              dimension: "ROWS",
+              startIndex: rowNumber - 1, // 0-based, inclusive
+              endIndex: rowNumber, // exclusive
+            },
+          },
+        },
+      ],
+    },
+  });
+}
+
+/** Removes a check's row from the Images-mapping tab (best-effort). */
+export async function deleteImageMapping(checkNumber: string): Promise<void> {
+  const sheets = getSheetsApi();
+  try {
+    const sheetId = await getSheetId(IMAGES_TAB);
+    if (sheetId == null) return;
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId: spreadsheetId(),
+      range: `${IMAGES_TAB}!A:B`,
+    });
+    const rows = res.data.values ?? [];
+    // Delete from the bottom up so earlier indices stay valid.
+    const requests = [];
+    for (let i = rows.length - 1; i >= 0; i--) {
+      if ((rows[i][0] ?? "").toString().trim() === checkNumber) {
+        requests.push({
+          deleteDimension: {
+            range: { sheetId, dimension: "ROWS", startIndex: i, endIndex: i + 1 },
+          },
+        });
+      }
+    }
+    if (requests.length) {
+      await sheets.spreadsheets.batchUpdate({
+        spreadsheetId: spreadsheetId(),
+        requestBody: { requests },
+      });
+    }
+  } catch {
+    /* best-effort */
+  }
 }
 
 export async function isJtiUsed(jti: string): Promise<boolean> {

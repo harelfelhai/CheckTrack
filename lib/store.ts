@@ -17,6 +17,9 @@ export interface CheckStore {
     checkNumber: string,
     patch: Partial<CheckRecord>,
   ): Promise<CheckRecord | null>;
+  /** Permanently removes a check (and, in prod, its archived Drive files).
+   *  Manager-only action (spec addition). Returns false if not found. */
+  deleteCheck(checkNumber: string): Promise<boolean>;
 
   /** Persist the generated PDF; returns the URL stored in column 8. */
   savePdf(

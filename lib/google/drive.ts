@@ -57,6 +57,24 @@ export async function uploadImage(
   return { id: res.data.id! };
 }
 
+/** Extracts a Drive file id from a webViewLink (…/file/d/<id>/view) or
+ *  /uc?id=<id> style URL. Returns null if not parseable. */
+export function fileIdFromUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  const m = url.match(/\/d\/([\w-]+)/) || url.match(/[?&]id=([\w-]+)/);
+  return m?.[1] ?? null;
+}
+
+/** Permanently deletes a Drive file. Best-effort — never throws. */
+export async function deleteFile(fileId: string): Promise<void> {
+  const drive = getDriveApi();
+  try {
+    await drive.files.delete({ fileId, supportsAllDrives: true });
+  } catch {
+    /* file already gone / no permission — ignore */
+  }
+}
+
 /** Downloads an archived image by file id and returns it as a data URL. */
 export async function downloadImageDataUrl(fileId: string): Promise<string | null> {
   const drive = getDriveApi();

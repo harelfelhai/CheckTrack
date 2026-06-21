@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import CameraCapture from "@/components/CameraCapture";
+import ImageCropper from "@/components/ImageCropper";
 import CheckForm, { type CheckFormValues } from "@/components/CheckForm";
 import SignatureDialog from "@/components/SignatureDialog";
 import SharePanel, { type ShareInfo } from "@/components/SharePanel";
@@ -31,6 +32,7 @@ export default function CapturePage() {
   const [ocrBusy, setOcrBusy] = useState(false);
   const [ocrFilled, setOcrFilled] = useState(false);
   const [ocrNotice, setOcrNotice] = useState<string | null>(null);
+  const [cropping, setCropping] = useState(false);
 
   const busy = feedback.kind === "saving";
 
@@ -62,7 +64,7 @@ export default function CapturePage() {
       };
       if (!res.ok) throw new Error(data.error ?? "החילוץ נכשל");
       if (!data.enabled) {
-        setOcrNotice("חילוץ אוטומטי אינו מוגדר (הגדר GOOGLE_VISION_API_KEY). מלא ידנית.");
+        setOcrNotice("חילוץ אוטומטי אינו מוגדר. מלא ידנית.");
         return;
       }
       const any = data.checkNumber || data.amount || data.writtenDate;
@@ -218,7 +220,11 @@ export default function CapturePage() {
           </div>
         ) : (
           <>
-            <CameraCapture imageDataUrl={image} onCapture={setImage} />
+            <CameraCapture
+              imageDataUrl={image}
+              onCapture={setImage}
+              onRequestCrop={() => setCropping(true)}
+            />
 
             {image && (
               <button
@@ -291,6 +297,18 @@ export default function CapturePage() {
             setFeedback({ kind: "idle" });
           }}
           onConfirm={confirmFrontalSign}
+        />
+      )}
+
+      {cropping && image && (
+        <ImageCropper
+          src={image}
+          onConfirm={(cropped) => {
+            setImage(cropped);
+            setOcrFilled(false); // re-extract from the cropped image if desired
+            setCropping(false);
+          }}
+          onCancel={() => setCropping(false)}
         />
       )}
     </main>

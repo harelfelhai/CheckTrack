@@ -11,6 +11,7 @@ const delivered: CheckRecord = {
   deliveredAt: "2026-06-14T17:55:19.149Z",
   signerName: "ישראל ישראלי",
   fileUrl: "https://drive/abc",
+  createdAt: "2026-06-10T08:00:00.000Z",
 };
 
 describe("parseStatus", () => {
@@ -24,7 +25,7 @@ describe("parseStatus", () => {
 describe("recordToRow / rowToRecord", () => {
   it("round-trips a delivered record", () => {
     const row = recordToRow(delivered);
-    expect(row).toHaveLength(8);
+    expect(row).toHaveLength(9);
     expect(row[4]).toBe(STATUS_LABELS.delivered);
     expect(rowToRecord(row)).toEqual(delivered);
   });
@@ -39,6 +40,7 @@ describe("recordToRow / rowToRecord", () => {
       deliveredAt: null,
       signerName: null,
       fileUrl: null,
+      createdAt: null,
     };
     expect(rowToRecord(recordToRow(open))).toEqual(open);
   });

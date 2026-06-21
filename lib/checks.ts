@@ -11,23 +11,24 @@ export const STATUS_LABELS: Record<CheckStatus, string> = {
   delivered: "נמסר",
 };
 
-/** Header row written to the central Sheet, in column order. */
+/** Header row written to the central Sheet, in column order (A:I). */
 export const SHEET_HEADERS = [
   "מספר צ'ק",
-  "שם המקבל",
-  "תאריך כתיבת הצ'ק",
-  "סכום הצ'ק",
+  "שם המוטב",
+  "תאריך פירעון",
+  'סכום הצ\'ק (כולל מע"מ)',
   "סטטוס צ'ק",
   "תאריך ושעת מסירה",
   "שם החותם המלא",
   "קישור לקובץ",
+  "תאריך רישום",
 ] as const;
 
 export function parseStatus(label: string): CheckStatus {
   return label.trim() === STATUS_LABELS.delivered ? "delivered" : "not_delivered";
 }
 
-/** Convert a record into a Sheet row (array of 8 cells, all strings). */
+/** Convert a record into a Sheet row (array of 9 cells, all strings). */
 export function recordToRow(record: CheckRecord): string[] {
   return [
     record.checkNumber,
@@ -38,6 +39,7 @@ export function recordToRow(record: CheckRecord): string[] {
     record.deliveredAt ?? "",
     record.signerName ?? "",
     record.fileUrl ?? "",
+    record.createdAt ?? "",
   ];
 }
 
@@ -54,5 +56,6 @@ export function rowToRecord(row: (string | number | null | undefined)[]): CheckR
     deliveredAt: cell(5) || null,
     signerName: cell(6) || null,
     fileUrl: cell(7) || null,
+    createdAt: cell(8) || null,
   };
 }

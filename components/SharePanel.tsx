@@ -3,7 +3,8 @@
 import { useState } from "react";
 
 export interface ShareInfo {
-  url: string;
+  /** Signing link, or null for a pickup notification (no link). */
+  url: string | null;
   message: string;
   whatsappUrl: string;
   mailtoUrl: string;
@@ -19,6 +20,7 @@ export default function SharePanel({
   onClose: () => void;
 }) {
   const [copied, setCopied] = useState(false);
+  const isPickup = !info.url;
 
   const canNativeShare = typeof navigator !== "undefined" && !!navigator.share;
 
@@ -31,6 +33,7 @@ export default function SharePanel({
   }
 
   async function copyLink() {
+    if (!info.url) return;
     try {
       await navigator.clipboard.writeText(info.url);
       setCopied(true);
@@ -45,7 +48,9 @@ export default function SharePanel({
   return (
     <div className="space-y-3 rounded-xl border border-valid/25 bg-valid-soft p-4">
       <p className="text-sm font-medium text-ink">
-        הצ'ק נשמר כ״לא נמסר״. שלח את הקישור לחתימה מרחוק:
+        {isPickup
+          ? "שלח הודעה שהצ'ק מוכן לאיסוף:"
+          : "הצ'ק נשמר כ״לא נמסר״. שלח את הקישור לחתימה מרחוק:"}
       </p>
 
       {canNativeShare && (
@@ -62,9 +67,11 @@ export default function SharePanel({
         שליחה במייל
       </a>
 
-      <button type="button" onClick={copyLink} className={`${btn} border border-rule bg-card text-ink hover:border-ink`}>
-        {copied ? "הקישור הועתק ✓" : "העתקת קישור"}
-      </button>
+      {!isPickup && (
+        <button type="button" onClick={copyLink} className={`${btn} border border-rule bg-card text-ink hover:border-ink`}>
+          {copied ? "הקישור הועתק ✓" : "העתקת קישור"}
+        </button>
+      )}
 
       <button type="button" onClick={onClose} className="w-full pt-1 text-sm text-ink-soft hover:text-ink">
         סגירה

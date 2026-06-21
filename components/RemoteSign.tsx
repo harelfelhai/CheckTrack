@@ -29,6 +29,7 @@ export default function RemoteSign({ token }: { token: string }) {
   const [signature, setSignature] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [scanFailed, setScanFailed] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -120,6 +121,19 @@ export default function RemoteSign({ token }: { token: string }) {
         </strong>
         , לזמן פירעון ב־<strong className="tnum">{check.writtenDate}</strong>.
       </div>
+
+      {!scanFailed && (
+        <div>
+          <span className="block text-xs font-semibold tracking-wide text-ink-soft">צילום הצ'ק</span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={`/api/sign/${token}/image`}
+            alt="צילום הצ'ק"
+            onError={() => setScanFailed(true)}
+            className="mt-1 max-h-72 w-full rounded-lg border border-rule bg-paper object-contain"
+          />
+        </div>
+      )}
 
       <div>
         <label className="block text-xs font-semibold tracking-wide text-ink-soft" htmlFor="signerName">

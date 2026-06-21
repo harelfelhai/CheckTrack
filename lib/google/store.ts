@@ -13,12 +13,20 @@ import {
   appendRow,
   findRowNumber,
   updateRow,
+  deleteRowByNumber,
+  deleteImageMapping,
   isJtiUsed,
   markJtiUsed,
   getImageFileId,
   setImageFileId,
 } from "@/lib/google/sheets";
-import { uploadPdf, uploadImage, downloadImageDataUrl } from "@/lib/google/drive";
+import {
+  uploadPdf,
+  uploadImage,
+  downloadImageDataUrl,
+  deleteFile,
+  fileIdFromUrl,
+} from "@/lib/google/drive";
 
 /** Filename-safe segment for the archived scan. */
 function scanBaseName(checkNumber: string): string {
@@ -54,6 +62,22 @@ export class GoogleStore implements CheckStore {
     const updated: CheckRecord = { ...existing, ...patch };
     await updateRow(rowNumber, updated);
     return updated;
+  }
+
+  async deleteCheck(checkNumber: string): Promise<boolean> {
+    const rowNumber = await findRowNumber(checkNumber);
+    if (!rowNumber) return false;
+    // Snapshot the record + scan id before deleting the row, so we can also
+    // purge the archived Drive files (manager-confirmed "מחיקה גורפת").
+    const record = (await listRows()).find((c) => c.checkNumber === checkNumber);
+    const scanFileId = await getImageFileId(checkNumber);
+    await deleteRowByNumber(rowNumber);
+    const pdfId = fileIdFromUrl(record?.fileUrl);
+    if (pdfId) await deleteFile(pdfId);
+    if (scanFileId) await deleteFile(scanFileId);
+    await deleteImageMapping(checkNumber);
+    this.imageCache.delete(checkNumber);
+    return true;
   }
 
   async savePdf(

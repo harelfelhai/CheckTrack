@@ -46,6 +46,7 @@ export async function POST(req: NextRequest) {
     deliveredAt: null,
     signerName: null,
     fileUrl: null,
+    createdAt: new Date().toISOString(),
   };
 
   const created = await store.createCheck(record);

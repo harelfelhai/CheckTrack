@@ -4,8 +4,8 @@ import type { NewCheckInput } from "@/lib/types";
 export function validateNewCheck(input: Partial<NewCheckInput>): string[] {
   const errors: string[] = [];
   if (!input.checkNumber?.toString().trim()) errors.push("מספר צ'ק חסר");
-  if (!input.recipientName?.toString().trim()) errors.push("שם המקבל חסר");
-  if (!input.writtenDate?.toString().trim()) errors.push("תאריך כתיבת הצ'ק חסר");
+  if (!input.recipientName?.toString().trim()) errors.push("שם המוטב חסר");
+  if (!input.writtenDate?.toString().trim()) errors.push("תאריך פירעון חסר");
   const amount = Number(input.amount);
   if (!Number.isFinite(amount) || amount <= 0) errors.push("סכום הצ'ק לא תקין");
   return errors;

@@ -55,6 +55,13 @@ export class MemoryStore implements CheckStore {
     return updated;
   }
 
+  async deleteCheck(checkNumber: string): Promise<boolean> {
+    const existed = checks().delete(checkNumber);
+    pdfs().delete(checkNumber);
+    images().delete(checkNumber);
+    return existed;
+  }
+
   async savePdf(
     checkNumber: string,
     _fileName: string,

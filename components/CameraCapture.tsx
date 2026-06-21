@@ -5,6 +5,8 @@ import { useRef, useState } from "react";
 interface Props {
   imageDataUrl: string | null;
   onCapture: (dataUrl: string | null) => void;
+  /** Opens the crop modal for the current image (פריט 1). */
+  onRequestCrop?: () => void;
 }
 
 /**
@@ -12,7 +14,7 @@ interface Props {
  * the device camera on mobile (`capture="environment"`), "Gallery" picks an
  * existing image (and is the natural path on desktop, which ignores `capture`).
  */
-export default function CameraCapture({ imageDataUrl, onCapture }: Props) {
+export default function CameraCapture({ imageDataUrl, onCapture, onRequestCrop }: Props) {
   const cameraRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
@@ -55,7 +57,16 @@ export default function CameraCapture({ imageDataUrl, onCapture }: Props) {
             alt="תצוגה מקדימה של הצ'ק"
             className="max-h-64 w-full rounded-lg border border-rule bg-card object-contain"
           />
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            {onRequestCrop && (
+              <button
+                type="button"
+                onClick={onRequestCrop}
+                className="flex-1 rounded-lg border border-rule bg-card px-4 py-2 text-sm font-medium text-ink hover:border-ink"
+              >
+                ✂️ חתוך
+              </button>
+            )}
             <button
               type="button"
               onClick={() => cameraRef.current?.click()}
