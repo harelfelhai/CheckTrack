@@ -80,7 +80,10 @@ export default function Dashboard({ isManager = false }: { isManager?: boolean }
     };
   }, [load]);
 
-  const open = checks.filter((c) => c.status !== "delivered");
+  // Newest-entered first. The Sheet is read in append order (oldest→newest), so
+  // reversing the filtered list puts the most recently captured cheque on top —
+  // the default the office wants. Robust even for legacy rows with no createdAt.
+  const open = checks.filter((c) => c.status !== "delivered").reverse();
 
   function filterSortArchive(list: CheckRecord[]): CheckRecord[] {
     const term = q.trim().toLowerCase();
@@ -377,7 +380,7 @@ export default function Dashboard({ isManager = false }: { isManager?: boolean }
                             }}
                             className={`${aBtn} bg-valid text-paper hover:opacity-90`}
                           >
-                            החתמה לצד
+                            החתמה פרונטלית
                           </button>
                           <button
                             type="button"
@@ -436,7 +439,7 @@ export default function Dashboard({ isManager = false }: { isManager?: boolean }
 
       {signTarget && (
         <SignatureDialog
-          title="החתמה לצד"
+          title="החתמה פרונטלית"
           subtitle={`צ'ק ${signTarget.checkNumber} · ${signTarget.recipientName}`}
           submitting={submitting}
           error={signError}
