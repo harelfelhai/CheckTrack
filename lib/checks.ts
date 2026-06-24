@@ -28,13 +28,15 @@ export function parseStatus(label: string): CheckStatus {
   return label.trim() === STATUS_LABELS.delivered ? "delivered" : "not_delivered";
 }
 
-/** Convert a record into a Sheet row (array of 9 cells, all strings). */
-export function recordToRow(record: CheckRecord): string[] {
+/** Convert a record into a Sheet row (9 cells). The amount is emitted as a real
+ *  number so the Sheet stores it numerically (enables SUM/sort); every other
+ *  cell stays text so the check number keeps any leading zeros under RAW input. */
+export function recordToRow(record: CheckRecord): (string | number)[] {
   return [
     record.checkNumber,
     record.recipientName,
     record.writtenDate,
-    String(record.amount),
+    record.amount,
     STATUS_LABELS[record.status],
     record.deliveredAt ?? "",
     record.signerName ?? "",

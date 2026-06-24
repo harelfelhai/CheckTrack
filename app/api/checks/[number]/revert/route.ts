@@ -21,12 +21,7 @@ export async function POST(
 
   const { number } = await ctx.params;
   const store = await getStore();
-  const updated = await store.updateCheck(decodeURIComponent(number), {
-    status: "not_delivered",
-    deliveredAt: null,
-    signerName: null,
-    fileUrl: null,
-  });
+  const updated = await store.revertCheck(decodeURIComponent(number));
   if (!updated) return NextResponse.json({ error: "הצ'ק לא נמצא" }, { status: 404 });
   return NextResponse.json({ check: updated });
 }

@@ -7,7 +7,7 @@ import ImageCropper from "@/components/ImageCropper";
 import CheckForm, { type CheckFormValues } from "@/components/CheckForm";
 import SignatureDialog from "@/components/SignatureDialog";
 import SharePanel, { type ShareInfo } from "@/components/SharePanel";
-import { validateNewCheck } from "@/lib/validation";
+import { validateNewCheck, parseAmount } from "@/lib/validation";
 
 type Feedback =
   | { kind: "idle" }
@@ -99,7 +99,7 @@ export default function CapturePage() {
         checkNumber: values.checkNumber,
         recipientName: values.recipientName,
         writtenDate: values.writtenDate,
-        amount: Number(values.amount),
+        amount: parseAmount(values.amount),
         imageDataUrl: image ?? undefined,
       }),
     });
@@ -113,7 +113,7 @@ export default function CapturePage() {
   }
 
   async function saveNotDelivered() {
-    const errors = validateNewCheck({ ...values, amount: Number(values.amount) });
+    const errors = validateNewCheck({ ...values, amount: parseAmount(values.amount) });
     if (errors.length) return setFeedback({ kind: "error", message: errors.join(", ") });
     setFeedback({ kind: "saving" });
     try {
@@ -126,7 +126,7 @@ export default function CapturePage() {
   }
 
   function startFrontalSign() {
-    const errors = validateNewCheck({ ...values, amount: Number(values.amount) });
+    const errors = validateNewCheck({ ...values, amount: parseAmount(values.amount) });
     if (errors.length) return setFeedback({ kind: "error", message: errors.join(", ") });
     setSignError(null);
     setSigning(true);
@@ -158,7 +158,7 @@ export default function CapturePage() {
   }
 
   async function sendRemoteLink() {
-    const errors = validateNewCheck({ ...values, amount: Number(values.amount) });
+    const errors = validateNewCheck({ ...values, amount: parseAmount(values.amount) });
     if (errors.length) return setFeedback({ kind: "error", message: errors.join(", ") });
     setShare(null);
     setFeedback({ kind: "saving" });

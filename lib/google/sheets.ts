@@ -94,8 +94,40 @@ export async function findRowNumber(checkNumber: string): Promise<number | null>
   return idx === -1 ? null : idx + 2; // +2: header row + 1-based
 }
 
+/** One consistent read returning both the 1-based row number and the parsed
+ *  record. Avoids the TOCTOU of a separate findRowNumber + listRows pair. */
+export async function findRecordRow(
+  checkNumber: string,
+): Promise<{ rowNumber: number; record: CheckRecord } | null> {
+  const sheets = getSheetsApi();
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId: spreadsheetId(),
+    range: `${tab()}!A2:I`,
+  });
+  const rows = res.data.values ?? [];
+  const idx = rows.findIndex((r) => (r[0] ?? "").toString().trim() === checkNumber);
+  if (idx === -1) return null;
+  return { rowNumber: idx + 2, record: rowToRecord(rows[idx] as (string | null)[]) };
+}
+
+/** Guards a positional write/delete: confirms the row still holds the expected
+ *  check number, so a concurrent insert/delete that shifted rows can't make us
+ *  clobber or delete the wrong cheque. Throws on mismatch. */
+async function assertRowIs(rowNumber: number, checkNumber: string): Promise<void> {
+  const sheets = getSheetsApi();
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId: spreadsheetId(),
+    range: `${tab()}!A${rowNumber}`,
+  });
+  const actual = (res.data.values?.[0]?.[0] ?? "").toString().trim();
+  if (actual !== checkNumber) {
+    throw new Error("עדכון בוטל: שורת היעד השתנתה בין הקריאה לכתיבה. נסו שוב.");
+  }
+}
+
 export async function updateRow(rowNumber: number, record: CheckRecord): Promise<void> {
   const sheets = getSheetsApi();
+  await assertRowIs(rowNumber, record.checkNumber);
   await sheets.spreadsheets.values.update({
     spreadsheetId: spreadsheetId(),
     range: `${tab()}!A${rowNumber}:I${rowNumber}`,
@@ -115,9 +147,15 @@ async function getSheetId(title: string): Promise<number | null> {
   return found?.properties?.sheetId ?? null;
 }
 
-/** Permanently deletes a data row (1-based, as returned by findRowNumber). */
-export async function deleteRowByNumber(rowNumber: number): Promise<void> {
+/** Permanently deletes a data row (1-based). When expectedCheckNumber is given,
+ *  re-confirms the row still holds it right before deleting — so a concurrent
+ *  row shift can't cause the wrong cheque to be deleted. */
+export async function deleteRowByNumber(
+  rowNumber: number,
+  expectedCheckNumber?: string,
+): Promise<void> {
   const sheets = getSheetsApi();
+  if (expectedCheckNumber != null) await assertRowIs(rowNumber, expectedCheckNumber);
   const sheetId = await getSheetId(tab());
   if (sheetId == null) throw new Error("לא נמצא הגיליון למחיקה");
   await sheets.spreadsheets.batchUpdate({

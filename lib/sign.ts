@@ -47,5 +47,16 @@ export async function applySignature(
     signerName,
     fileUrl: url,
   });
-  return { ok: true, check: saved ?? { ...updated, fileUrl: url } };
+  // Never report success if the status did not actually persist. The previous
+  // `saved ?? {...updated}` fallback could tell a supplier "נחתם בהצלחה" while
+  // the row stayed "לא נמסר" — a silent delivery-record loss. Surface it so the
+  // caller (and the signer) can retry instead.
+  if (!saved) {
+    return {
+      ok: false,
+      status: 500,
+      error: "החתימה עובדה אך שמירת הסטטוס נכשלה. נסו שוב.",
+    };
+  }
+  return { ok: true, check: saved };
 }

@@ -44,19 +44,40 @@ export default function Dashboard({ isManager = false }: { isManager?: boolean }
   >("createdAt");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const res = await fetch("/api/checks", { cache: "no-store" });
       const data = (await res.json()) as { checks: CheckRecord[] };
       setChecks(data.checks ?? []);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, []);
 
+  // Initial load, then keep the view fresh. A dashboard left open (or restored
+  // from the browser's back/forward cache) must reflect changes applied
+  // elsewhere — e.g. a supplier signing remotely. Without this, an already-open
+  // dashboard kept showing signed cheques as "לא נמסר" (incident 2026-06-24).
+  // Background refreshes are silent (no loading flash); the table stays visible.
   useEffect(() => {
     void load();
+    const refresh = () => {
+      if (document.visibilityState === "visible") void load(true);
+    };
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) void load(true); // restored from bfcache
+    };
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    window.addEventListener("pageshow", onPageShow);
+    const id = window.setInterval(refresh, 60000);
+    return () => {
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+      window.removeEventListener("pageshow", onPageShow);
+      window.clearInterval(id);
+    };
   }, [load]);
 
   const open = checks.filter((c) => c.status !== "delivered");
@@ -199,13 +220,21 @@ export default function Dashboard({ isManager = false }: { isManager?: boolean }
       </header>
       <p className="mb-5 text-sm text-ink-soft">בקרה ומעקב אחר הצ'קים היוצאים</p>
 
-      <div className="mb-4 flex gap-2">
+      <div className="mb-4 flex items-center gap-2">
         <TabButton active={tab === "open"} onClick={() => setTab("open")}>
           לא נמסרו ({open.length})
         </TabButton>
         <TabButton active={tab === "all"} onClick={() => setTab("all")}>
           ארכיון כל הצ'קים ({checks.length})
         </TabButton>
+        <button
+          type="button"
+          onClick={() => load()}
+          title="רענון נתונים"
+          className="ms-auto rounded-lg border border-rule bg-card px-3 py-2 text-sm font-medium text-ink-soft transition hover:border-ink hover:text-ink"
+        >
+          ↻ רענן
+        </button>
       </div>
 
       {tab === "all" && (

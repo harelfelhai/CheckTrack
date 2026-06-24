@@ -19,5 +19,8 @@ export async function GET(
 
   const store = await getStore();
   const dataUrl = await store.getImage(claims.checkNumber);
-  return imageResponse(dataUrl) ?? NextResponse.json({ error: "אין צילום" }, { status: 404 });
+  return (
+    imageResponse(dataUrl, "no-store") ??
+    NextResponse.json({ error: "אין צילום" }, { status: 404 })
+  );
 }

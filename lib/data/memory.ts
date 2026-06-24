@@ -62,6 +62,16 @@ export class MemoryStore implements CheckStore {
     return existed;
   }
 
+  async revertCheck(checkNumber: string): Promise<CheckRecord | null> {
+    pdfs().delete(checkNumber);
+    return this.updateCheck(checkNumber, {
+      status: "not_delivered",
+      deliveredAt: null,
+      signerName: null,
+      fileUrl: null,
+    });
+  }
+
   async savePdf(
     checkNumber: string,
     _fileName: string,

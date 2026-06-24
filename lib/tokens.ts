@@ -7,8 +7,15 @@ import { SignJWT, jwtVerify } from "jose";
  */
 
 function secret(): Uint8Array {
-  const value =
-    process.env.TOKEN_SIGNING_SECRET || "dev-only-insecure-secret-change-me";
+  const value = process.env.TOKEN_SIGNING_SECRET;
+  if (!value) {
+    // In production a missing secret means every signing link would be signed
+    // with a public constant (forgeable). Refuse rather than run insecurely.
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("TOKEN_SIGNING_SECRET is required in production");
+    }
+    return new TextEncoder().encode("dev-only-insecure-secret-change-me");
+  }
   return new TextEncoder().encode(value);
 }
 

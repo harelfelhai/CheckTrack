@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStore } from "@/lib/store";
-import { validateNewCheck } from "@/lib/validation";
+import { validateNewCheck, parseAmount } from "@/lib/validation";
 import type { CheckRecord, NewCheckInput } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     checkNumber,
     recipientName: body.recipientName.trim(),
     writtenDate: body.writtenDate,
-    amount: Number(body.amount),
+    amount: parseAmount(body.amount),
     status: "not_delivered",
     deliveredAt: null,
     signerName: null,

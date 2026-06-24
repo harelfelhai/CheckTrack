@@ -20,6 +20,10 @@ export interface CheckStore {
   /** Permanently removes a check (and, in prod, its archived Drive files).
    *  Manager-only action (spec addition). Returns false if not found. */
   deleteCheck(checkNumber: string): Promise<boolean>;
+  /** Manager-only: return a delivered check to "not delivered" with a full reset
+   *  (clears signer/deliveredAt/fileUrl) and, in prod, deletes the now-orphaned
+   *  signed PDF from Drive. Returns null if not found. */
+  revertCheck(checkNumber: string): Promise<CheckRecord | null>;
 
   /** Persist the generated PDF; returns the URL stored in column 8. */
   savePdf(

@@ -1,9 +1,7 @@
 /**
  * Google-backed CheckStore: Google Sheets as the central database + Google
- * Drive for archived PDFs (spec §3). Active when CHECKTRACK_DEV_MODE=false.
- *
- * Requires the env credentials in `.env.local.example`. Verified end-to-end
- * once Google credentials are configured.
+ * Drive for archived PDFs and cheque scans (spec §3). Active when
+ * CHECKTRACK_DEV_MODE=false.
  */
 
 import type { CheckRecord } from "@/lib/types";
@@ -11,7 +9,7 @@ import type { CheckStore } from "@/lib/store";
 import {
   listRows,
   appendRow,
-  findRowNumber,
+  findRecordRow,
   updateRow,
   deleteRowByNumber,
   deleteImageMapping,
@@ -35,15 +33,12 @@ function scanBaseName(checkNumber: string): string {
 }
 
 export class GoogleStore implements CheckStore {
-  /** Ephemeral cache of captured scans (process lifetime) for PDF generation. */
-  private imageCache = new Map<string, string>();
-
   async listChecks(): Promise<CheckRecord[]> {
     return listRows();
   }
 
   async getCheck(checkNumber: string): Promise<CheckRecord | null> {
-    return (await listRows()).find((c) => c.checkNumber === checkNumber) ?? null;
+    return (await findRecordRow(checkNumber))?.record ?? null;
   }
 
   async createCheck(record: CheckRecord): Promise<CheckRecord> {
@@ -55,29 +50,44 @@ export class GoogleStore implements CheckStore {
     checkNumber: string,
     patch: Partial<CheckRecord>,
   ): Promise<CheckRecord | null> {
-    const rowNumber = await findRowNumber(checkNumber);
-    if (!rowNumber) return null;
-    const existing = (await listRows()).find((c) => c.checkNumber === checkNumber);
-    if (!existing) return null;
-    const updated: CheckRecord = { ...existing, ...patch };
-    await updateRow(rowNumber, updated);
+    // Single consistent read of (rowNumber, record); updateRow re-verifies the
+    // row identity right before writing.
+    const found = await findRecordRow(checkNumber);
+    if (!found) return null;
+    const updated: CheckRecord = { ...found.record, ...patch };
+    await updateRow(found.rowNumber, updated);
     return updated;
   }
 
   async deleteCheck(checkNumber: string): Promise<boolean> {
-    const rowNumber = await findRowNumber(checkNumber);
-    if (!rowNumber) return false;
-    // Snapshot the record + scan id before deleting the row, so we can also
-    // purge the archived Drive files (manager-confirmed "מחיקה גורפת").
-    const record = (await listRows()).find((c) => c.checkNumber === checkNumber);
+    const found = await findRecordRow(checkNumber);
+    if (!found) return false;
+    // Snapshot the scan id before deleting, then purge the archived Drive files
+    // (manager-confirmed "מחיקה גורפת"). The delete re-verifies the row.
     const scanFileId = await getImageFileId(checkNumber);
-    await deleteRowByNumber(rowNumber);
-    const pdfId = fileIdFromUrl(record?.fileUrl);
+    await deleteRowByNumber(found.rowNumber, checkNumber);
+    const pdfId = fileIdFromUrl(found.record.fileUrl);
     if (pdfId) await deleteFile(pdfId);
     if (scanFileId) await deleteFile(scanFileId);
     await deleteImageMapping(checkNumber);
-    this.imageCache.delete(checkNumber);
     return true;
+  }
+
+  async revertCheck(checkNumber: string): Promise<CheckRecord | null> {
+    const found = await findRecordRow(checkNumber);
+    if (!found) return null;
+    const orphanPdfId = fileIdFromUrl(found.record.fileUrl);
+    const updated: CheckRecord = {
+      ...found.record,
+      status: "not_delivered",
+      deliveredAt: null,
+      signerName: null,
+      fileUrl: null,
+    };
+    await updateRow(found.rowNumber, updated);
+    // Purge the now-orphaned signed PDF (it embeds the scan + signature = PII).
+    if (orphanPdfId) await deleteFile(orphanPdfId);
+    return updated;
   }
 
   async savePdf(
@@ -93,25 +103,23 @@ export class GoogleStore implements CheckStore {
   }
 
   async saveImage(checkNumber: string, dataUrl: string): Promise<void> {
-    this.imageCache.set(checkNumber, dataUrl); // fast path for the same instance
-    // Durably archive to Drive so remote signing (possibly a different/cold
-    // instance) can still embed the scan in the signed PDF. Best-effort.
+    // Durably archive to Drive so any instance (incl. remote signing on a cold
+    // instance) can embed the scan in the signed PDF. Best-effort — a Drive
+    // hiccup must not block check creation — but it is logged, never silent.
     try {
       const { id } = await uploadImage(scanBaseName(checkNumber), dataUrl);
       await setImageFileId(checkNumber, id);
-    } catch {
-      /* keep the in-memory copy; archival is best-effort */
+    } catch (e) {
+      console.error(`saveImage: failed to archive scan for ${checkNumber}:`, e);
     }
   }
 
   async getImage(checkNumber: string): Promise<string | null> {
-    const cached = this.imageCache.get(checkNumber);
-    if (cached) return cached;
+    // Always read from Drive (the durable source of truth) so a re-captured
+    // scan is never masked by a stale process-level cache.
     const fileId = await getImageFileId(checkNumber);
     if (!fileId) return null;
-    const dataUrl = await downloadImageDataUrl(fileId);
-    if (dataUrl) this.imageCache.set(checkNumber, dataUrl);
-    return dataUrl;
+    return downloadImageDataUrl(fileId);
   }
 
   async isTokenUsed(jti: string): Promise<boolean> {
