@@ -89,27 +89,35 @@ export default function Dashboard({ isManager = false }: { isManager?: boolean }
     const term = q.trim().toLowerCase();
     const min = amtMin === "" ? null : Number(amtMin);
     const max = amtMax === "" ? null : Number(amtMax);
-    const out = list.filter((c) => {
-      if (term && !`${c.recipientName} ${c.checkNumber}`.toLowerCase().includes(term)) return false;
-      if (wFrom && c.writtenDate < wFrom) return false;
-      if (wTo && c.writtenDate > wTo) return false;
-      const dDate = (c.deliveredAt ?? "").slice(0, 10);
-      if (dFrom && (!dDate || dDate < dFrom)) return false;
-      if (dTo && (!dDate || dDate > dTo)) return false;
-      if (min != null && Number.isFinite(min) && c.amount < min) return false;
-      if (max != null && Number.isFinite(max) && c.amount > max) return false;
-      return true;
-    });
-    out.sort((a, b) => {
+    // Tag each row with its Sheet append index (i) = true entry order, used to
+    // sort by "תאריך רישום" reliably even when legacy rows have no createdAt.
+    const out = list
+      .map((c, i) => ({ c, i }))
+      .filter(({ c }) => {
+        if (term && !`${c.recipientName} ${c.checkNumber}`.toLowerCase().includes(term)) return false;
+        if (wFrom && c.writtenDate < wFrom) return false;
+        if (wTo && c.writtenDate > wTo) return false;
+        const dDate = (c.deliveredAt ?? "").slice(0, 10);
+        if (dFrom && (!dDate || dDate < dFrom)) return false;
+        if (dTo && (!dDate || dDate > dTo)) return false;
+        if (min != null && Number.isFinite(min) && c.amount < min) return false;
+        if (max != null && Number.isFinite(max) && c.amount > max) return false;
+        return true;
+      });
+    out.sort((A, B) => {
+      const a = A.c;
+      const b = B.c;
       const cmp =
         sortKey === "amount"
           ? a.amount - b.amount
           : sortKey === "recipientName"
             ? a.recipientName.localeCompare(b.recipientName, "he")
-            : (a[sortKey] ?? "").toString().localeCompare((b[sortKey] ?? "").toString());
+            : sortKey === "createdAt"
+              ? A.i - B.i // entry order — robust to empty createdAt on legacy rows
+              : (a[sortKey] ?? "").toString().localeCompare((b[sortKey] ?? "").toString());
       return sortDir === "asc" ? cmp : -cmp;
     });
-    return out;
+    return out.map(({ c }) => c);
   }
 
   const rows = tab === "open" ? open : filterSortArchive(checks);
