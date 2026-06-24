@@ -8,6 +8,7 @@ import CheckForm, { type CheckFormValues } from "@/components/CheckForm";
 import SignatureDialog from "@/components/SignatureDialog";
 import SharePanel, { type ShareInfo } from "@/components/SharePanel";
 import { validateNewCheck, parseAmount } from "@/lib/validation";
+import { compressImageDataUrl } from "@/lib/image-compress";
 
 type Feedback =
   | { kind: "idle" }
@@ -33,6 +34,7 @@ export default function CapturePage() {
   const [ocrFilled, setOcrFilled] = useState(false);
   const [ocrNotice, setOcrNotice] = useState<string | null>(null);
   const [cropping, setCropping] = useState(false);
+  const [imageNotice, setImageNotice] = useState<string | null>(null);
 
   const busy = feedback.kind === "saving";
 
@@ -41,6 +43,25 @@ export default function CapturePage() {
     setImage(null);
     setOcrFilled(false);
     setOcrNotice(null);
+    setImageNotice(null);
+  }
+
+  /** Accept a new image (camera/gallery or the cropper), shrinking it in the
+   *  browser when it's very large so OCR + upload stay fast and we never hit the
+   *  server size cap. The user is told whenever a compression happened. */
+  async function handleNewImage(dataUrl: string | null) {
+    if (!dataUrl) {
+      setImage(null);
+      setImageNotice(null);
+      return;
+    }
+    const { dataUrl: out, compressed } = await compressImageDataUrl(dataUrl);
+    setImage(out);
+    setImageNotice(
+      compressed
+        ? "התמונה הייתה גדולה וכווצה אוטומטית — האיכות נשמרה לקריאות. אפשר להמשיך כרגיל."
+        : null,
+    );
   }
 
   /** OCR draft fill (spec §5.ב) — fields stay editable; never overwrites a
@@ -222,9 +243,15 @@ export default function CapturePage() {
           <>
             <CameraCapture
               imageDataUrl={image}
-              onCapture={setImage}
+              onCapture={handleNewImage}
               onRequestCrop={() => setCropping(true)}
             />
+
+            {imageNotice && (
+              <p className="rounded-lg border border-valid/30 bg-valid-soft px-3 py-2 text-xs text-ink">
+                {imageNotice}
+              </p>
+            )}
 
             {image && (
               <button
@@ -304,7 +331,7 @@ export default function CapturePage() {
         <ImageCropper
           src={image}
           onConfirm={(cropped) => {
-            setImage(cropped);
+            void handleNewImage(cropped);
             setOcrFilled(false); // re-extract from the cropped image if desired
             setCropping(false);
           }}

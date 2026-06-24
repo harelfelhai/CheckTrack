@@ -5,9 +5,10 @@ import { isAuthEnabled, isAllowedEmail } from "@/lib/auth-config";
 
 export const runtime = "nodejs";
 
-// Cap the request so a caller can't blow up memory or inflate the paid Gemini
-// bill with a giant data URL. ~8 MB of base64 ≈ a ~6 MB image — plenty.
-const MAX_BODY_BYTES = 8 * 1024 * 1024;
+// Generous backstop only. Normal large photos are shrunk client-side before
+// upload (lib/image-compress.ts), so this should essentially never trigger — it
+// just stops a pathological payload from blowing up memory / the Gemini bill.
+const MAX_BODY_BYTES = 25 * 1024 * 1024;
 
 /**
  * POST /api/ocr — extract draft check fields from a captured image (spec §5.ב).
@@ -27,7 +28,7 @@ export async function POST(req: NextRequest) {
 
   const len = Number(req.headers.get("content-length") ?? 0);
   if (len > MAX_BODY_BYTES) {
-    return NextResponse.json({ error: "התמונה גדולה מדי" }, { status: 413 });
+    return NextResponse.json({ error: "התמונה גדולה מאוד — נסו לצלם שוב או לחתוך אותה" }, { status: 413 });
   }
 
   let body: { imageDataUrl?: string };
@@ -41,7 +42,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "חסרה תמונה לחילוץ" }, { status: 400 });
   }
   if (body.imageDataUrl.length > MAX_BODY_BYTES) {
-    return NextResponse.json({ error: "התמונה גדולה מדי" }, { status: 413 });
+    return NextResponse.json({ error: "התמונה גדולה מאוד — נסו לצלם שוב או לחתוך אותה" }, { status: 413 });
   }
 
   try {
